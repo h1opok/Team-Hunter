@@ -730,23 +730,26 @@ class GUIInstance(QMainWindow):
     def open_telegram(self):
         webbrowser.open("https://t.me/CryptoCrackersUK")
 
-    def count_addresses(self):
+    def count_addresses(self, btc_bf_file=None):
+        if btc_bf_file is None:
+            btc_bf_file = BTC_BF_FILE       
         try:
             last_updated = os.path.getmtime(BTC_BF_FILE)
-            seconds_old = time.time() - last_updated
-            days_old = seconds_old / (60 * 60 * 24)
+            last_updated_datetime = datetime.datetime.fromtimestamp(last_updated)
+            now = datetime.datetime.now()
+            delta = now - last_updated_datetime
 
-            if days_old < 1:
-                hours_old = int((seconds_old % (60 * 60 * 24)) / (60 * 60))
-                minutes_old = int((seconds_old % (60 * 60)) / 60)
+            if delta < datetime.timedelta(days=1):
+                hours, remainder = divmod(delta.seconds, 3600)
+                minutes = remainder // 60
 
                 time_units = []
 
-                if hours_old > 0:
-                    time_units.append(f"{hours_old} {'hour' if hours_old == 1 else 'hours'}")
+                if hours > 0:
+                    time_units.append(f"{hours} {'hour' if hours == 1 else 'hours'}")
 
-                if minutes_old > 0:
-                    time_units.append(f"{minutes_old} {'minute' if minutes_old == 1 else 'minutes'}")
+                if minutes > 0:
+                    time_units.append(f"{minutes} {'minute' if minutes == 1 else 'minutes'}")
 
                 time_str = ', '.join(time_units)
 
@@ -754,21 +757,21 @@ class GUIInstance(QMainWindow):
                     message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{time_str}</b> old.'
                 else:
                     message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>less than a minute</b> old.'
-            elif days_old < 2:
-                hours_old = int((seconds_old % (60 * 60 * 24)) / (60 * 60))
-                minutes_old = int((seconds_old % (60 * 60)) / 60)
+            elif delta < datetime.timedelta(days=2):
+                hours, remainder = divmod(delta.seconds, 3600)
+                minutes = remainder // 60
 
                 time_str = f'1 day'
 
-                if hours_old > 0:
-                    time_str += f', {hours_old} {"hour" if hours_old == 1 else "hours"}'
+                if hours > 0:
+                    time_str += f', {hours} {"hour" if hours == 1 else "hours"}'
 
-                if minutes_old > 0:
-                    time_str += f', {minutes_old} {"minute" if minutes_old == 1 else "minutes"}'
+                if minutes > 0:
+                    time_str += f', {minutes} {"minute" if minutes == 1 else "minutes"}'
 
                 message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{time_str}</b> old.'
             else:
-                message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{int(days_old)} days</b> old.'
+                message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{delta.days} days</b> old.'
         except FileNotFoundError:
             message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses.'
 
