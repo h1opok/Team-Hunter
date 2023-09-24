@@ -39,6 +39,9 @@ def create_settings_file_if_not_exists():
                 "token": "",
                 "chatid": ""
             },
+            "Discord": {
+                "webhook_url": ""
+            },
             "Addresses": {
                 "START_ADDRESS": "",
                 "END_ADDRESS": ""
@@ -255,7 +258,8 @@ class GUIInstance(QMainWindow):
 
         # Create Settings menu
         settings_menu = menubar.addMenu("Settings")
-        add_menu_action(settings_menu, "Telegram", self.open_settings)
+        add_menu_action(settings_menu, "Telegram", self.open_telegram_settings)
+        add_menu_action(settings_menu, "Discord", self.open_discord_settings)
 
         # Create Tools menu
         tools_menu = menubar.addMenu("Tools")
@@ -619,11 +623,14 @@ class GUIInstance(QMainWindow):
         layout.addWidget(self.knightRiderGroupBox)
 
         # Create checkbox for custom Telegram credentials
-        self.use_custom_credentials_checkbox = QCheckBox("Use Custom Telegram Credentials (edit in settings menu)")
-        self.use_custom_credentials_checkbox.setChecked(False)
+        self.use_telegram_credentials_checkbox = QCheckBox("Use Custom Telegram Credentials (edit in settings menu)")
+        self.use_telegram_credentials_checkbox.setChecked(False)
+        self.use_discord_credentials_checkbox = QCheckBox("Use Custom Discord Credentials (edit in settings menu)")
+        self.use_discord_credentials_checkbox.setChecked(False)
 
         custom_credentials_layout = QHBoxLayout()
-        custom_credentials_layout.addWidget(self.use_custom_credentials_checkbox)
+        custom_credentials_layout.addWidget(self.use_telegram_credentials_checkbox)
+        custom_credentials_layout.addWidget(self.use_discord_credentials_checkbox)
         layout.addLayout(custom_credentials_layout)
         layout.addLayout(credit_label)
 
@@ -700,8 +707,12 @@ class GUIInstance(QMainWindow):
     def exit_app(self):
         QApplication.quit()
 
-    def open_settings(self):
-        settings_dialog = miz.SettingsDialog(self)
+    def open_telegram_settings(self):
+        settings_dialog = miz.Settings_telegram_Dialog(self)
+        settings_dialog.exec()
+    
+    def open_discord_settings(self):
+        settings_dialog = miz.Settings_discord_Dialog(self)
         settings_dialog.exec()
 
     def balcheck(self):
@@ -844,6 +855,27 @@ class GUIInstance(QMainWindow):
         except ValueError:
             range_message = "Range should be in Bit 1-256 "
             QMessageBox.information(self, "Range Error", range_message)
+
+    def send_to_discord(self, text):
+        settings = get_settings()
+        webhook_url = settings.get("webhook_url", "").strip()
+        print(f'Webhook URL: {webhook_url}')
+        headers = {'Content-Type': 'application/json'}
+
+        payload = {
+            'content': text
+        }
+
+        try:
+            response = requests.post(webhook_url, json=payload, headers=headers)
+
+            if response.status_code == 204:
+                print('Message sent to Discord successfully!')
+            else:
+                print(f'Failed to send message to Discord. Status Code: {response.status_code}')
+        except Exception as e:
+            print(f'Error sending message to Discord: {str(e)}')
+
 
     def send_to_telegram(self, text):
         settings = get_settings()
@@ -988,8 +1020,10 @@ class GUIInstance(QMainWindow):
                             with open(WINNER_COMPRESSED, "w") as f:
                                 f.write(WINTEXT)
 
-                        if self.use_custom_credentials_checkbox.isChecked():
+                        if self.use_telegram_credentials_checkbox.isChecked():
                             self.send_to_telegram(WINTEXT)
+                        if self.use_discord_credentials_checkbox.isChecked():
+                            self.send_to_discord(WINTEXT)
                         if self.win_checkbox.isChecked():
                             winner_dialog = miz.WinnerDialog(WINTEXT, self)
                             winner_dialog.exec()
@@ -1016,8 +1050,10 @@ class GUIInstance(QMainWindow):
                             # Then create the file and write WINTEXT to it
                             with open(WINNER_COMPRESSED, "w") as f:
                                 f.write(WINTEXT)
-                        if self.use_custom_credentials_checkbox.isChecked():
+                        if self.use_telegram_credentials_checkbox.isChecked():
                             self.send_to_telegram(WINTEXT)
+                        if self.use_discord_credentials_checkbox.isChecked():
+                            self.send_to_discord(WINTEXT)
                         if self.win_checkbox.isChecked():
                             winner_dialog = miz.WinnerDialog(WINTEXT, self)
                             winner_dialog.exec()
@@ -1041,8 +1077,10 @@ class GUIInstance(QMainWindow):
                             with open(WINNER_UNCOMPRESSED, "w") as f:
                                 f.write(WINTEXT)
 
-                        if self.use_custom_credentials_checkbox.isChecked():
+                        if self.use_telegram_credentials_checkbox.isChecked():
                             self.send_to_telegram(WINTEXT)
+                        if self.use_discord_credentials_checkbox.isChecked():
+                            self.send_to_discord(WINTEXT)
                         if self.win_checkbox.isChecked():
                             winner_dialog = miz.WinnerDialog(WINTEXT, self)
                             winner_dialog.exec()
@@ -1066,8 +1104,10 @@ class GUIInstance(QMainWindow):
                             with open(WINNER_P2SH, "w") as f:
                                 f.write(WINTEXT)
 
-                        if self.use_custom_credentials_checkbox.isChecked():
+                        if self.use_telegram_credentials_checkbox.isChecked():
                             self.send_to_telegram(WINTEXT)
+                        if self.use_discord_credentials_checkbox.isChecked():
+                            self.send_to_discord(WINTEXT)
                         if self.win_checkbox.isChecked():
                             winner_dialog = miz.WinnerDialog(WINTEXT, self)
                             winner_dialog.exec()
@@ -1091,8 +1131,10 @@ class GUIInstance(QMainWindow):
                             with open(WINNER_BECH32, "w") as f:
                                 f.write(WINTEXT)
 
-                        if self.use_custom_credentials_checkbox.isChecked():
+                        if self.use_telegram_credentials_checkbox.isChecked():
                             self.send_to_telegram(WINTEXT)
+                        if self.use_discord_credentials_checkbox.isChecked():
+                            self.send_to_discord(WINTEXT)
                         if self.win_checkbox.isChecked():
                             winner_dialog = miz.WinnerDialog(WINTEXT, self)
                             winner_dialog.exec()
