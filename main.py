@@ -8,7 +8,7 @@ import platform
 import webbrowser
 import locale
 from config import *
-
+import subprocess
 try:
     from PyQt6.QtCore import *
     from PyQt6.QtWidgets import *
