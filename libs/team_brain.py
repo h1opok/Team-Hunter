@@ -1,4 +1,4 @@
-import codecs, sys, os, binascii, hashlib, ecdsa
+import codecs, hashlib, ecdsa
 
 # BrainWallet
 class BrainWallet:
