@@ -1,6 +1,4 @@
 import hmac, struct, os, hashlib
-import base58
-import ecdsa
 import bit
 from bit import Key
 from bit.format import bytes_to_wif
