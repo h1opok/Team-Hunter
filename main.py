@@ -15,7 +15,7 @@ try:
     from PyQt6.QtGui import *
     from bloomfilter import BloomFilter, ScalableBloomFilter, SizeGrowthRate
     import libs
-    import secp256k1 as ice
+    from libs import secp256k1 as ice
     from libs import miz_widget as miz
     import qdarktheme
     import requests
