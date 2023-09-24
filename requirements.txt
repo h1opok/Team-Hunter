@@ -5,3 +5,5 @@ pyqtdarktheme
 requests
 base58
 ecdsa
+gzip
+webbrowser
