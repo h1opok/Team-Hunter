@@ -7,8 +7,8 @@
         "chatid": ""
     },
     "Addresses": {
-        "START_ADDRESS": "1",
-        "END_ADDRESS": null
+        "START_ADDRESS": null,
+        "END_ADDRESS": "null"
     },
     "Paths": {
         "CSS_FOLDER": "css",

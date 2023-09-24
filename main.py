@@ -898,17 +898,18 @@ class GUIInstance(QMainWindow):
             self.total_steps = end_value - start_value
             self.scanning = True
 
+            # Determine scanning mode (Random, Sequence, or Reverse)
             if self.random_button.isChecked():
                 self.timer = QTimer(self)
-                self.timer.timeout.connect(self.update_display_random)
+                self.timer.timeout.connect(lambda: self.update_display_random(start_value, end_value))
             elif self.sequence_button.isChecked():
                 self.current = start_value
                 self.timer = QTimer(self)
-                self.timer.timeout.connect(self.update_display_sequence)
+                self.timer.timeout.connect(lambda: self.update_display_sequence(start_value, end_value))
             elif self.reverse_button.isChecked():
                 self.current = end_value
                 self.timer = QTimer(self)
-                self.timer.timeout.connect(self.update_display_reverse)
+                self.timer.timeout.connect(lambda: self.update_display_reverse(start_value, end_value))
 
             self.timer.start()
             self.start_time = time.time()
@@ -917,18 +918,6 @@ class GUIInstance(QMainWindow):
         except Exception as e:
             error_message = f"Ranges empty please Type a Start and Stop: {str(e)}"
             QMessageBox.critical(self, "Error", error_message)
-
-    def update_display_random(self):
-        start, end = int(self.start_edit.text(), 16), int(self.end_edit.text(), 16)
-        self.update_display(start, end)
-
-    def update_display_sequence(self):
-        start, end = int(self.start_edit.text(), 16), int(self.end_edit.text(), 16)
-        self.update_display(start, end)
-
-    def update_display_reverse(self):
-        start, end = int(self.start_edit.text(), 16), int(self.end_edit.text(), 16)
-        self.update_display(start, end)
 
     def stop(self):
         if isinstance(self.timer, QTimer):
@@ -1145,7 +1134,7 @@ class GUIInstance(QMainWindow):
         elif self.reverse_button.isChecked():
             update_config_address(None, HEX)
 
-    def update_display(self, start, end):
+    def update_display_random(self, start, end):
         if not self.scanning:
             self.timer.stop()
             return
@@ -1180,21 +1169,25 @@ class GUIInstance(QMainWindow):
         self.counter += self.power_format
 
     # Modify update_display_sequence function
-    def update_display_sequence(self):
-        start = int(self.start_edit.text(), 16)
-        end = int(self.end_edit.text(), 16)
-        self.update_display(start, end)
+    def update_display_sequence(self, start, end):
+        self.num = self.current
+        if self.current > int(self.end_edit.text(), 16):
+            self.timer.stop()
+            self.scanning = False
+            return
 
         def is_address_in_skip(address, skip_ranges):
-            address = int(address, 16) if isinstance(address, str) else address
-            for s, e in skip_ranges:
-                if int(s, 16) <= address <= int(e, 16):
+            if isinstance(address, str):
+                address = int(address, 16)
+
+            for start, end in skip_ranges:
+                if int(start, 16) <= address <= int(end, 16):
                     return True
             return False
 
         total_steps = end - start
         max_value = 10000
-        update_interval = 1  # Update every 1 address
+        update_interval = 1  # Update every 1 addresses
 
         while self.num < end and self.scanning:
             if not is_address_in_skip(self.num, self.skip_ranges):
@@ -1207,34 +1200,45 @@ class GUIInstance(QMainWindow):
                 self.current += self.power_format
                 self.counter += self.power_format
 
+            # Increment self.num to move to the next address
             self.num += self.power_format
 
+            # Check if it's time to update the UI
             if self.num % update_interval == 0:
+                # Update the UI and allow it to process events
                 QApplication.processEvents()
 
+        # Ensure self.num doesn't exceed end
         self.num = end
+
+        # Make sure to set self.scanning to False when the scan is completed
         self.scanning = False
 
     # Modify update_display_reverse function
-    def update_display_reverse(self):
-        start = int(self.start_edit.text(), 16)
-        end = int(self.end_edit.text(), 16)
-        self.update_display(start, end)
+    def update_display_reverse(self, start, end):
+        self.num = self.current
+        if self.current < int(self.start_edit.text(), 16):
+            self.timer.stop()
+            self.scanning = False
+            return
 
         def is_address_in_skip(address, skip_ranges):
-            address = int(address, 16) if isinstance(address, str) else address
-            for s, e in skip_ranges:
-                if int(s, 16) <= address <= int(e, 16):
+            if isinstance(address, str):
+                address = int(address, 16)
+
+            for start, end in skip_ranges:
+                if int(start, 16) <= address <= int(end, 16):
                     return True
             return False
 
         total_steps = end - start
         max_value = 10000
-        update_interval = 1  # Update every 1 address
+        update_interval = 1  # Update every 1 addresses
 
+        # Initialize a counter to keep track of processed addresses
         processed_count = 0
 
-        while self.num >= start and self.scanning:
+        while self.num >= start:
             if not is_address_in_skip(self.num, self.skip_ranges):
                 current_step = end - self.num
                 scaled_current_step = (current_step / total_steps) * max_value
@@ -1245,14 +1249,24 @@ class GUIInstance(QMainWindow):
                 self.current -= self.power_format
                 self.counter += self.power_format
 
+            # Increment self.num to move to the previous address
             self.num -= self.power_format
             processed_count += 1
 
+            # Check if the stop button is pressed
+            if not self.scanning:
+                break
+
+            # Check if it's time to update the UI
             if processed_count >= update_interval:
                 processed_count = 0
+                # Update the UI and allow it to process events
                 QApplication.processEvents()
 
+        # Ensure self.num doesn't go below start
         self.num = start
+
+        # Make sure to set self.scanning to False when the scan is completed
         self.scanning = False
 
     # This function updates the keys per second display
