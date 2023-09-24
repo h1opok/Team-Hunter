@@ -3,7 +3,7 @@ from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkRepl
 from PyQt6.QtCore import QTimer, Qt, QRect, QUrl
 from PyQt6.QtGui import QPainter, QColor, QFont, QIcon
 import subprocess
-import urllib.request
+import requests
 import os, sys
 import gzip
 import team_brain
