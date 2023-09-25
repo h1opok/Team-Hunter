@@ -206,6 +206,7 @@ class GUIInstance(QMainWindow):
         add_menu_action(tools_menu, "Check Balance", self.balcheck)
         add_menu_action(tools_menu, "Conversion Tools", self.conv_check)
         add_menu_action(tools_menu, "Range Divsion", self.range_check)
+        add_menu_action(tools_menu, "16x16", self.load_16x16)
 
         # Create Help menu
         help_menu = menubar.addMenu("Help")
@@ -667,6 +668,12 @@ class GUIInstance(QMainWindow):
         range_dialog = range_div_gui.RangeDialog(self)
         range_dialog.exec()
         
+    def load_16x16(self):
+        try:
+            subprocess.run(['python', '16x16.py'], check=True)
+        except subprocess.CalledProcessError:
+            QMessageBox.critical(self, "Error", "Failed to run '16x16.py'")
+
     def update_action_run(self):
         update_dialog = up_bloom_gui.UpdateBloomFilterDialog(self)
         update_dialog.exec()
@@ -915,19 +922,8 @@ class GUIInstance(QMainWindow):
 
             if self.balance_check_checkbox.isChecked():
                 caddr = ice.privatekey_to_address(0, True, dec)
-                response_data = team_balance.get_balance(caddr)
-
-                if response_data:
-                    confirmed_balance = response_data.get("confirmed", 0)
-                    unconfirmed_balance = response_data.get("unconfirmed", 0)
-                    tx_count = response_data.get("txs", 0)
-                    received = response_data.get("received", 0)
-
-                    confirmed_balance_btc = confirmed_balance / 10**8
-                    unconfirmed_balance_btc = unconfirmed_balance / 10**8
-                    received_btc = received / 10**8
-
-                    BTCOUT = f"""
+                confirmed_balance_btc, received_btc, unconfirmed_balance_btc, tx_count = team_balance.check_balance(caddr)
+                BTCOUT = f"""
     Decimal Private Key: {dec}
     Hexadecimal Private Key: {HEX}
     BTC Address: {caddr}
@@ -935,14 +931,14 @@ class GUIInstance(QMainWindow):
     >> Total Received: {received_btc:.8f} BTC                 >> Transaction Count: {tx_count}
     """
 
-                    self.value_edit_dec.setText(str(dec))
-                    self.value_edit_hex.setText(HEX)
-                    self.comp_text.setText(BTCOUT)
+                self.value_edit_dec.setText(str(dec))
+                self.value_edit_hex.setText(HEX)
+                self.comp_text.setText(BTCOUT)
 
-                    if confirmed_balance > 0:
-                        found += 1
-                        self.found_keys_scanned_edit.setText(str(found))
-                        WINTEXT = f"""
+                if confirmed_balance_btc > 0:
+                    found += 1
+                    self.found_keys_scanned_edit.setText(str(found))
+                    WINTEXT = f"""
     Decimal Private Key: {dec}
     Hexadecimal Private Key: {HEX}
     BTC Address: {caddr}
@@ -950,23 +946,23 @@ class GUIInstance(QMainWindow):
     >> Total Received: {received_btc:.8f} BTC                 >> Transaction Count: {tx_count}
     """
 
-                        try:
-                            with open(WINNER_COMPRESSED, "a") as f:
-                                f.write(WINTEXT)
-                        except FileNotFoundError:
-                            os.makedirs(os.path.dirname(WINNER_COMPRESSED), exist_ok=True)
+                    try:
+                        with open(WINNER_COMPRESSED, "a") as f:
+                            f.write(WINTEXT)
+                    except FileNotFoundError:
+                        os.makedirs(os.path.dirname(WINNER_COMPRESSED), exist_ok=True)
 
-                            # Then create the file and write WINTEXT to it
-                            with open(WINNER_COMPRESSED, "w") as f:
-                                f.write(WINTEXT)
+                        # Then create the file and write WINTEXT to it
+                        with open(WINNER_COMPRESSED, "w") as f:
+                            f.write(WINTEXT)
 
-                        if self.use_telegram_credentials_checkbox.isChecked():
-                            self.send_to_telegram(WINTEXT)
-                        if self.use_discord_credentials_checkbox.isChecked():
-                            self.send_to_discord(WINTEXT)
-                        if self.win_checkbox.isChecked():
-                            winner_dialog = win_gui.WinnerDialog(WINTEXT, self)
-                            winner_dialog.exec()
+                    if self.use_telegram_credentials_checkbox.isChecked():
+                        self.send_to_telegram(WINTEXT)
+                    if self.use_discord_credentials_checkbox.isChecked():
+                        self.send_to_discord(WINTEXT)
+                    if self.win_checkbox.isChecked():
+                        winner_dialog = win_gui.WinnerDialog(WINTEXT, self)
+                        winner_dialog.exec()
 
             else:
                 dec_keys.append(dec)

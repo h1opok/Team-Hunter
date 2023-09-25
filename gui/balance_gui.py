@@ -4,7 +4,6 @@ from PyQt6.QtGui import *
 import sys
 sys.path.append('libs')
 import libs
-from libs import secp256k1 as ice
 from libs import team_balance
 
 
@@ -31,33 +30,19 @@ class BalanceDialog(QDialog):
         layout.addWidget(self.balance_label)
         self.setLayout(layout)
         
-        self.Check_button.clicked.connect(self.check_balance)
+        self.Check_button.clicked.connect(self.get_balance)
         self.cancel_button.clicked.connect(self.reject)
         
-    def check_balance(self):
+    def get_balance(self):
         # Get the Bitcoin address from the input field
         address = self.address_input.text()
+        confirmed_balance_btc, received_btc, unconfirmed_balance_btc, tx_count = team_balance.check_balance(address)
+        # Create a formatted string with balance information
+        BTCOUT = f"""               BTC Address: {address}
+            >> Confirmed Balance: {confirmed_balance_btc:.8f} BTC     >> Unconfirmed Balance: {unconfirmed_balance_btc:.8f} BTC
+            >> Total Received: {received_btc:.8f} BTC                 >> Transaction Count: {tx_count}"""
 
-        # Check the balance for the entered address
-        response_data = team_balance.get_balance(address)
-
-        if response_data:
-            confirmed_balance = response_data.get("confirmed", 0)
-            unconfirmed_balance = response_data.get("unconfirmed", 0)
-            tx_count = response_data.get("txs", 0)
-            received = response_data.get("received", 0)
-
-            # Convert satoshis to BTC
-            confirmed_balance_btc = confirmed_balance / 10**8
-            unconfirmed_balance_btc = unconfirmed_balance / 10**8
-            received_btc = received / 10**8
-
-            # Create a formatted string with balance information
-            BTCOUT = f"""               BTC Address: {address}
-                >> Confirmed Balance: {confirmed_balance_btc:.8f} BTC     >> Unconfirmed Balance: {unconfirmed_balance_btc:.8f} BTC
-                >> Total Received: {received_btc:.8f} BTC                 >> Transaction Count: {tx_count}"""
-
-            # Display the balance information (you can show it in a label or text widget)
-            self.balance_label.setText(
-                BTCOUT
-            )
+        # Display the balance information (you can show it in a label or text widget)
+        self.balance_label.setText(
+            BTCOUT
+        )

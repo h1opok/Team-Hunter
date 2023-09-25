@@ -1,11 +1,21 @@
 import requests
-
-def get_balance(addr):
+import json
+def check_balance(address):
     try:
-        response = requests.get(f"https://api.haskoin.com/btc/address/{addr}/balance")
+        response = requests.get(f"https://api.haskoin.com/btc/address/{address}/balance")
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            confirmed_balance = data.get("confirmed", 0)
+            unconfirmed_balance = data.get("unconfirmed", 0)
+            tx_count = data.get("txs", 0)
+            received = data.get("received", 0)
+
+            # Convert satoshis to BTC
+            balance = confirmed_balance / 10**8
+            totalSent = unconfirmed_balance / 10**8
+            totalReceived = received / 10**8
+            return balance, totalReceived, totalSent, tx_count
         else:
-            print(f"Error getting balance for address {addr}: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending request for address {addr}: {str(e)}")
+            print('API request failed with status code:', response.status_code)
+    except json.JSONDecodeError:
+        print('Error decoding JSON response from API')
