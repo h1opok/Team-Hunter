@@ -12,116 +12,47 @@ from config import *
 import subprocess
 import requests
 import json
-try:
-    from PyQt6.QtCore import *
-    from PyQt6.QtWidgets import *
-    from PyQt6.QtGui import *
-    from bloomfilter import BloomFilter
-    import libs
-    import gui
-    from libs import secp256k1 as ice
-    from libs import team_balance
-    from gui import knightrider_gui
-    from gui import bar_gui
-    from gui import win_gui
-    from gui import up_bloom_gui
-    from gui import balance_gui
-    from gui import show_ranges_gui
-    from gui import range_div_gui
-    from gui import conversion_gui
-    from gui import telegram_gui
-    from gui import discord_gui
-    from gui import about_gui
-    import qdarktheme
-    import requests
-    import datetime
-
-except ImportError:
-    print("Some required packages are missing. Please install them manually.")
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
+from bloomfilter import BloomFilter
+import libs
+import gui
+from libs import secp256k1 as ice
+from libs import team_balance
+from libs import create_setting
+from libs import set_settings
+from libs import load_bloom
+from gui import knightrider_gui
+from gui import bar_gui
+from gui import win_gui
+from gui import up_bloom_gui
+from gui import balance_gui
+from gui import show_ranges_gui
+from gui import range_div_gui
+from gui import conversion_gui
+from gui import telegram_gui
+from gui import discord_gui
+from gui import about_gui
+import qdarktheme
+import requests
+import datetime
 
 version = "0.21"
 
 # Set system locale
 locale.setlocale(locale.LC_ALL, "")
 
-def create_settings_file_if_not_exists():
-    if not os.path.exists(CONFIG_FILE):
-        config_data = {
-            "Theme": {
-                "theme": "dark"
-            },
-            "Telegram": {
-                "token": "",
-                "chatid": ""
-            },
-            "Discord": {
-                "webhook_url": ""
-            },
-            "Addresses": {
-                "START_ADDRESS": "",
-                "END_ADDRESS": ""
-            },
-            "Paths": {
-                "CSS_FOLDER": "css",
-                "BLOOM_FOLDER": "bloom",
-                "IMAGES_FOLDER": "images",
-                "WINNER_FOLDER": "#WINNER",
-                "GLOBAL_THEME": "global.css",
-                "DARK_THEME": "dark.css",
-                "LIGHT_THEME": "light.css",
-                "WINNER_COMPRESSED": "foundcaddr.txt",
-                "WINNER_UNCOMPRESSED": "founduaddr.txt",
-                "WINNER_P2SH": "foundp2sh.txt",
-                "WINNER_BECH32": "foundbech32.txt",
-                "BTC_BF_FILE": "btc.bf",
-                "BTC_TXT_FILE": "btc.txt"
-            }
-        }
-        
-        with open(CONFIG_FILE, "w") as file:
-            json.dump(config_data, file, indent=4)
-
 def initialize_application():
     app = QApplication(sys.argv)
     return app
 
-def load_bloom_filter():
-    try:
-        with open(BTC_BF_FILE, "rb") as fp:
-            addfind = BloomFilter.load(fp)
-    except FileNotFoundError:
-        try:
-            with open(BTC_TXT_FILE) as file:
-                addfind = file.read().split()
-        except FileNotFoundError:
-            addfind = []
-
-    return addfind
-
-def get_settings():
-    settings_dict = {}
-    try:
-        with open(CONFIG_FILE, "r") as settings_file:
-            for line in settings_file:
-                line = line.strip()
-                if "=" in line:
-                    key, value = line.split("=", 1)
-                    settings_dict[key] = value
-    except FileNotFoundError:
-        setting_message = "Settings file not found."
-        QMessageBox.information(None, "File not found", setting_message)
-    except Exception as e:
-        error_message = f"An error occurred while reading settings: {e}"
-        QMessageBox.critical(None, "Error", error_message)
-    return settings_dict
-
-
 # Main execution
 if __name__ == "__main__":
-    create_settings_file_if_not_exists()
+    create_setting.create_settings_file_if_not_exists()
     app = initialize_application()
-    addfind = load_bloom_filter()
-    settings = get_settings()
+    addfind = load_bloom.load_bloom_filter()
+    settings = set_settings.get_settings()
 
 # Constants
 INITIAL_WINDOW_X = 80
@@ -141,7 +72,7 @@ class GUIInstance(QMainWindow):
         self.setGeometry(INITIAL_WINDOW_X, INITIAL_WINDOW_Y, WINDOW_WIDTH, WINDOW_HEIGHT)
 
         # Create settings file if it doesn't exist
-        create_settings_file_if_not_exists()
+        create_setting.create_settings_file_if_not_exists()
 
         # Initialize skip_ranges as an empty list and create an instance of ShowRangesDialog.
         self.skip_ranges = []
@@ -803,7 +734,7 @@ class GUIInstance(QMainWindow):
 
 
     def get_theme_preference(self):
-        return get_settings().get("theme", "dark")
+        return set_settings.get_settings().get("theme", "dark")
 
     def toggle_theme(self):
         self.dark_mode = not self.dark_mode
@@ -866,7 +797,7 @@ class GUIInstance(QMainWindow):
             QMessageBox.information(self, "Range Error", range_message)
 
     def send_to_discord(self, text):
-        settings = get_settings()
+        settings = set_settings.get_settings()
         webhook_url = settings.get("webhook_url", "").strip()
         print(f'Webhook URL: {webhook_url}')
         headers = {'Content-Type': 'application/json'}
@@ -887,7 +818,7 @@ class GUIInstance(QMainWindow):
 
 
     def send_to_telegram(self, text):
-        settings = get_settings()
+        settings = set_settings.get_settings()
         apiToken = settings.get("token", "").strip()
         chatID = settings.get("chatid", "").strip()
 
