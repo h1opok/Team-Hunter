@@ -129,7 +129,7 @@ def generate_keys(cpu_start, cpu_end, num_cpus, is_active_flag):
     except KeyboardInterrupt:
         # If a Ctrl+C signal is received, exit the loop gracefully
         pass
-            
+addfind = load_bloom.load_bloom_filter()            
 def process_address(address, private_key):
     if address in addfind:
         print(f'\nDarkFound!! Private Key: {hex(private_key)}\tAddress: {address}\n')
