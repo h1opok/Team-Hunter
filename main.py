@@ -1,35 +1,29 @@
-import sys
-sys.path.append('libs')
-sys.path.append('config')
-sys.path.append('gui')
 import os
 import random
 import time
 import platform
 import webbrowser
 import locale
-from config import *
 import subprocess
 import requests
 import json
+import datetime
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+
 from bloomfilter import BloomFilter
-import libs
-import gui
-from libs import secp256k1 as ice
-from libs import team_balance
-from libs import create_setting
-from libs import set_settings
-from libs import load_bloom
-from gui import show_ranges_gui
-from gui import balance_gui
-from gui import bar_gui
-from gui import knightrider_gui
+from libs import secp256k1 as ice, team_balance, create_setting, set_settings, load_bloom
+from gui import (knightrider_gui, bar_gui, win_gui, up_bloom_gui, balance_gui, show_ranges_gui,
+                 range_div_gui, conversion_gui, telegram_gui, discord_gui, about_gui)
+
+import sys
+sys.path.extend(['libs', 'config', 'gui'])
+
+from config import *
+
 import qdarktheme
-import requests
-import datetime
 
 version = "0.22"
 
