@@ -77,7 +77,6 @@ class GUIInstance(QMainWindow):
             self.dark_mode_button.setText("🌙")
             self.load_light_mode()
             self.dark_mode = False
-
     
     def load_global_styles(self):
         with open(f"{GLOBAL_THEME}", 'r') as css_file:
@@ -323,7 +322,6 @@ class GUIInstance(QMainWindow):
         options_layout2.setStretchFactor(keyspacerange_layout, 5)
 
         self.keyspace_slider.valueChanged.connect(self.update_keyspace_range)
-
         
         # Bits
         self.bitsLabel = QLabel("Bits:", self)

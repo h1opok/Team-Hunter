@@ -1,28 +1,29 @@
-import os, platform, hashlib
-import sys
-sys.path.append('libs')
-sys.path.append('config')
-sys.path.append('gui')
-
-import libs
-import gui
-from libs import secp256k1 as ice
-from libs import team_balance
-from libs import load_bloom
-from gui import knightrider_gui
-from gui import win_gui
-import webbrowser
+import os
 import random
+import webbrowser
+import locale
+import datetime
+import numpy as np
+from mnemonic import Mnemonic
+from hdwallet import HDWallet
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+
 from bloomfilter import BloomFilter
-import multiprocessing
-import numpy as np
-import time
-from mnemonic import Mnemonic
-from hdwallet import HDWallet
-import signal
+from libs import secp256k1 as ice, team_balance, load_bloom, set_settings
+from gui import (knightrider_gui, win_gui)
+
+import sys
+sys.path.extend(['libs', 'config', 'gui'])
+
+from config import *
+
+import qdarktheme
+
+# Set system locale
+locale.setlocale(locale.LC_ALL, "")
 
 DEFAULT_SEED_RATIO = 45
 GRID_SIZE = 16
@@ -219,6 +220,37 @@ class App(QMainWindow):
         self.online_check_balance = False
         self.init_ui()
 
+        self.theme_preference = self.get_theme_preference()
+        if self.theme_preference == "dark":
+            self.dark_mode_button.setText("🌞")
+            self.load_dark_mode()
+            self.dark_mode = True
+        elif self.theme_preference == "light":
+            self.dark_mode_button.setText("🌙")
+            self.load_light_mode()
+            self.dark_mode = False
+
+    def load_global_styles(self):
+        with open(f"{GLOBAL_THEME}", 'r') as css_file:
+            global_qss = css_file.read()
+        return global_qss
+
+    def load_dark_mode(self):
+        dark_stylesheet = self.load_global_styles()
+        with open(f"{DARK_THEME}", "r") as dark_file:
+            dark_stylesheet += dark_file.read()
+
+        self.setStyleSheet(dark_stylesheet)
+        qdarktheme.setup_theme("dark")
+
+    def load_light_mode(self):
+        light_stylesheet = self.load_global_styles()
+        with open(f"{LIGHT_THEME}", "r") as light_file:
+            light_stylesheet += light_file.read()
+
+        self.setStyleSheet(light_stylesheet)
+        qdarktheme.setup_theme("light")
+
     def init_ui(self):
         self.setWindowIcon(QIcon('miz.ico'))
         self.setStyleSheet("font-size: 14px; font-family: Calibri;")
@@ -268,29 +300,21 @@ class App(QMainWindow):
         main_layout.addWidget(self.welcome_label)
         main_layout.addWidget(title_label)
         main_layout.addWidget(title_label1)
-        
-        self.colourGroupBox = QGroupBox(self)
-        self.colourGroupBox.setStyleSheet("QGroupBox { border: 3px solid red; padding: 7px; }")
-        self.colourWidget = QWidget()
-        self.colourLayout = QHBoxLayout(self.colourWidget)
-        self.colorlable = QLabel('Pick Grid Colour', self)
-        self.colorlable.setStyleSheet("font-size: 16px; font-weight: bold; color: red;")
-        self.colorlable.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.colorlable.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.colorComboBox = QComboBox(self)
-        self.colorComboBox.addItem("Default Colour")
-        self.colorComboBox.addItem("Option 1: White Background, Purple Box")
-        self.colorComboBox.addItem("Option 2: Black Background, Green Box")
-        self.colorComboBox.addItem("Option 3: White Background, Blue Box")
-        self.colorComboBox.addItem("Option 4: Yellow Background, Blue Box")
-        self.colorComboBox.addItem("Option 5: Red Background, Black Box")
-        self.colorComboBox.addItem("Option 6: Black Background, Yellow Box")
-        self.colorComboBox.currentIndexChanged.connect(self.update_color)
-        self.colourLayout.addWidget(self.colorlable)
-        self.colourLayout.addWidget(self.colorComboBox)
-        self.colourGroupBox.setLayout(self.colourLayout)
+        # Create a QPushButton for dark mode toggle
+        self.dark_mode_button = QPushButton(self)
+        self.dark_mode_button.setFixedSize(30, 30)
+        self.dark_mode_button.clicked.connect(self.toggle_theme)
+        self.dark_mode_button.setChecked(True if self.get_theme_preference() == "dark" else False)
 
-        left_layout.addWidget(self.colourGroupBox)
+        self.dark_mode = self.get_theme_preference() == "dark"
+        self.load_dark_mode() if self.dark_mode else self.load_light_mode()
+        self.toggle_theme()
+
+        dark_mode_layout = QHBoxLayout()
+        dark_mode_layout.addStretch()
+        dark_mode_layout.addWidget(self.dark_mode_button)
+
+        left_layout.addLayout(dark_mode_layout)
 
         main_layout1 = QVBoxLayout()
         main_layout2 = QHBoxLayout()
@@ -425,6 +449,19 @@ class App(QMainWindow):
         
         center_layout.addWidget(backward_group_box)
         
+        self.speedGroupBox = QGroupBox(self)
+        self.speedGroupBox.setTitle("Speed Left faster Right Slower")
+        self.speedGroupBox.setStyleSheet("QGroupBox { border: 3px solid red; padding: 7px; font-size: 14px; font-weight: bold; color: black;}")
+        speed_layout = QHBoxLayout(self.speedGroupBox)
+        self.speed_slider = QSlider(Qt.Orientation.Horizontal)
+        self.speed_slider.setMinimum(0)
+        self.speed_slider.setMaximum(200)
+        self.speed_slider_value_display = QLabel(self)
+        speed_layout.addWidget(self.speed_slider)
+        speed_layout.addWidget(self.speed_slider_value_display)
+        center_layout.addWidget(self.speedGroupBox)
+        self.speed_slider.valueChanged.connect(self.update_speed_label)
+
         # Create KnightRiderWidget for visual feedback
         self.knightRiderWidget = knightrider_gui.KnightRiderWidget(self)
         self.knightRiderWidget.setSizePolicy(
@@ -447,8 +484,8 @@ class App(QMainWindow):
         right_layout = QVBoxLayout()
         self.layout.addLayout(right_layout)
         labels_starting = QHBoxLayout()
-        self.add_count_label = QLabel(self.count_add())
-        self.add_count_label.setStyleSheet("font-size: 14px; font-weight: bold; color: black;")
+        # Create the self.add_count_label
+        self.add_count_label = QLabel(self.count_addresses(), objectName="count_addlabel", alignment=Qt.AlignmentFlag.AlignLeft)
         self.online_check_box = QCheckBox("🔞Check Balance Online🔞")
         self.online_check_box.setStyleSheet("font-size: 14px; font-weight: bold; color: red;")
         self.online_check_box.setChecked(False)
@@ -683,6 +720,18 @@ class App(QMainWindow):
         self.canvas.mouseReleaseEvent = self.canvas_mouse_release_event
         self.show()
     
+    def update_speed_label(self):
+        actual_speed = self.speed_slider.value()
+        self.speed_slider_value_display.setText(str(actual_speed))
+        
+    def get_theme_preference(self):
+        return set_settings.get_settings().get("theme", "dark")
+
+    def toggle_theme(self):
+        self.dark_mode = not self.dark_mode
+        self.load_dark_mode() if self.dark_mode else self.load_light_mode()
+        self.dark_mode_button.setText("🌞" if self.dark_mode else "🌙")
+
     def open_browser(self, address):
         url = f'https://www.blockchain.com/explorer/addresses/btc/{address}'
         webbrowser.open(url)
@@ -703,10 +752,52 @@ class App(QMainWindow):
         app.exec()
         pass
     
-    def count_add(self):
-        addr_data = len(addfind)
-        addr_count_print = f'Total BTC Addresses Loaded and Checking : {addr_data}'
-        return addr_count_print
+    def count_addresses(self, btc_bf_file=None):
+        if btc_bf_file is None:
+            btc_bf_file = BTC_BF_FILE       
+        try:
+            last_updated = os.path.getmtime(BTC_BF_FILE)
+            last_updated_datetime = datetime.datetime.fromtimestamp(last_updated)
+            now = datetime.datetime.now()
+            delta = now - last_updated_datetime
+
+            if delta < datetime.timedelta(days=1):
+                hours, remainder = divmod(delta.seconds, 3600)
+                minutes = remainder // 60
+
+                time_units = []
+
+                if hours > 0:
+                    time_units.append(f"{hours} {'hour' if hours == 1 else 'hours'}")
+
+                if minutes > 0:
+                    time_units.append(f"{minutes} {'minute' if minutes == 1 else 'minutes'}")
+
+                time_str = ', '.join(time_units)
+
+                if time_units:
+                    message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{time_str}</b> old.'
+                else:
+                    message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>less than a minute</b> old.'
+            elif delta < datetime.timedelta(days=2):
+                hours, remainder = divmod(delta.seconds, 3600)
+                minutes = remainder // 60
+
+                time_str = f'1 day'
+
+                if hours > 0:
+                    time_str += f', {hours} {"hour" if hours == 1 else "hours"}'
+
+                if minutes > 0:
+                    time_str += f', {minutes} {"minute" if minutes == 1 else "minutes"}'
+
+                message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{time_str}</b> old.'
+            else:
+                message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses. The database is <b>{delta.days} days</b> old.'
+        except FileNotFoundError:
+            message = f'Currently checking <b>{locale.format_string("%d", len(addfind), grouping=True)}</b> addresses.'
+
+        return message
         
     def update_grid_from_key(self, int_value):
         binstring = "{0:b}".format(int_value)
@@ -1236,50 +1327,6 @@ class App(QMainWindow):
     def update_labels(self):
         self.lbl_tick_no.setText('🔑 Total Private Keys Scanned 🔑: %d' % self.tick_count)
         self.lbl_total_no.setText('₿ Total Addresses Scanned ₿: %d' % self.addr_count)
-        
-    def update_color(self, index):
-        if index == 1:
-            color = QColor(128, 0, 128)
-            self.on_cell_color = QColor(128, 0, 128)
-            self.off_cell_color = QColor(255, 255, 255)
-        elif index == 2:
-            color = QColor(0, 128, 0)
-            self.on_cell_color = QColor(0, 128, 0)
-            self.off_cell_color = QColor(0, 0, 0)
-        elif index == 3:
-            color = QColor(0, 0, 255)
-            self.on_cell_color = QColor(0, 0, 255)
-            self.off_cell_color = QColor(255, 255, 255)
-        elif index == 4:
-            color = QColor(0, 0, 255)
-            self.on_cell_color = QColor(0, 0, 255)
-            self.off_cell_color = QColor(255, 255, 0)
-        elif index == 5:
-            color = QColor(0, 0, 0)
-            self.on_cell_color = QColor(0, 0, 0)
-            self.off_cell_color = QColor(255, 0, 0)
-        elif index == 6:
-            color = QColor(0, 0, 0)
-            self.on_cell_color = QColor(255, 255, 0)
-            self.off_cell_color = QColor(0, 0, 0)
-        else:
-            color = QColor(255, 0, 0)
-            self.on_cell_color = QColor(255, 0, 0)
-            self.off_cell_color = QColor(255, 255, 255)
-
-        self.update_canvas()
-
-        border_color = f"border: 3px solid {color.name()};"
-        style_sheet = f"QGroupBox {{ {border_color} padding: 7px; font-size: 14px; font-weight: bold; color: black;}}"
-        for widget in self.findChildren(QGroupBox):
-            widget.setStyleSheet(style_sheet)
-        self.knightRiderGroupBox.setStyleSheet(style_sheet)
-        miz = f"font-size: 17px; font-weight: bold; color: {color.name()};"
-        self.mizogg_label.setStyleSheet(miz)
-        color_lab = f"font-size: 16px; font-weight: bold; color: {color.name()};"
-        self.colorlable.setStyleSheet(color_lab)
-        welcome = f"font-size: 30px; font-weight: bold; color: {color.name()};"
-        self.welcome_label.setStyleSheet(welcome)
 
     def tick(self):
         if self.in_tick:
