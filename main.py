@@ -23,12 +23,15 @@ from libs import team_balance
 from libs import create_setting
 from libs import set_settings
 from libs import load_bloom
-from gui import *
+from gui import show_ranges_gui
+from gui import balance_gui
+from gui import bar_gui
+from gui import knightrider_gui
 import qdarktheme
 import requests
 import datetime
 
-version = "0.21"
+version = "0.22"
 
 # Set system locale
 locale.setlocale(locale.LC_ALL, "")
@@ -49,8 +52,6 @@ INITIAL_WINDOW_X = 80
 INITIAL_WINDOW_Y = 80
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 560
-
-version = '0.21'
 
 # GUIInstance: QWidget class for the main GUI interface.
 class GUIInstance(QMainWindow):

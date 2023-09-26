@@ -42,112 +42,6 @@ mizogg = f'''
  {f"[>] Running with Python {sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"}
 '''
 
-class DarkspaceScannerThread(QThread):
-    btc_hunter_finished = pyqtSignal(str, str)
-    grid_data_ready = pyqtSignal(list)
-
-    def __init__(self, start_value, end_value, num_cpus):
-        super().__init__()
-        self.start_value = start_value
-        self.end_value = end_value
-        self.is_active = True
-        self.num_cpus = num_cpus
-        self.processes = []  # Initialize the processes list
-        self.is_active = True
-    
-    def run(self):
-        counter = 0
-        is_active_flag = multiprocessing.Value('i', 1)  # 1 means active, 0 means inactive
-        processes = []
-        while is_active_flag.value:
-            start = int(self.start_value)
-            end = int(self.end_value)
-            chunk_size = (end - start) // self.num_cpus
-            ranges = [(start + i * chunk_size, start + (i + 1) * chunk_size) for i in range(self.num_cpus)]
-            processes = []
-            for i in range(self.num_cpus):
-                cpu_start = ranges[i][0]
-                cpu_end = ranges[i][1]
-                p = multiprocessing.Process(target=generate_keys, args=(cpu_start, cpu_end, self.num_cpus, is_active_flag))
-                processes.append(p)
-                p.start()
-            self.processes = processes  # Store the processes for later termination
-
-            for process in processes:
-                process.join()
-    
-    def stop(self):
-        for process in self.processes:
-            process.terminate()
-
-        # Send SIGINT (Ctrl+C) signal to each process
-        for process in self.processes:
-            process.send_signal(signal.SIGINT)
-
-        for process in self.processes:
-            process.join()
-
-        self.processes = []
-
-def generate_keys(cpu_start, cpu_end, num_cpus, is_active_flag):
-    try:
-        keys_generated = 0
-        total_keys_scanned = 0
-        total_keys_scanned1 = 0
-        start_time = time.time()
-        group_size = 10000
-        while is_active_flag.value:
-            for i in range(cpu_start, cpu_end, group_size):
-                private_key = random.randrange(cpu_start, cpu_end)
-                P = ice.scalar_multiplication(private_key)
-                current_pvk = private_key + 1
-                
-                Pv = ice.point_sequential_increment(group_size, P)
-                keys_generated += 1*num_cpus
-                
-                for t in range(group_size):
-                    this_btc = ice.pubkey_to_address(0, True, Pv[t*65:t*65+65])
-                    process_address(this_btc, current_pvk+t)
-                    total_keys_scanned += keys_generated
-                    total_keys_scanned1 += keys_generated
-                    
-                    if time.time() - start_time >= 1 and multiprocessing.current_process()._identity[0] == 1:
-                        elapsed_time = time.time() - start_time
-                        speed = keys_generated / elapsed_time if elapsed_time > 0 else 0
-                        formatted_speed = convert_int(speed)
-                        speed1 = total_keys_scanned / elapsed_time if elapsed_time > 0 else 0
-                        formatted_speed1 = convert_int(speed1)
-                        description = f"CPU {num_cpus} Total/CPU={formatted_speed}Keys/Sec  GroupSize/CPU={formatted_speed1}Keys/Sec Total Keys: {total_keys_scanned1} HEX : {current_pvk+t}"
-                        print(f"CPU {num_cpus} Total/CPU={formatted_speed}Keys/Sec  GroupSize/CPU={formatted_speed1}Keys/Sec Total Keys: {total_keys_scanned1} HEX : {current_pvk+t}", end="")
-                        keys_generated = 0
-                        total_keys_scanned = 0
-                        start_time = time.time()
-                        
-                P = Pv[-65:]
-                current_pvk += group_size
-                
-    except KeyboardInterrupt:
-        # If a Ctrl+C signal is received, exit the loop gracefully
-        pass
-addfind = load_bloom.load_bloom_filter()            
-def process_address(address, private_key):
-    if address in addfind:
-        print(f'\nDarkFound!! Private Key: {hex(private_key)}\tAddress: {address}\n')
-        with open('DarkFound.txt', 'a') as result:
-            result.write(f'Private Key: {hex(private_key)}\tAddress: {address}\n')   
-
-def convert_int(num: int): 
-    dict_suffix = {0: 'key', 1: 'Kkey/s', 2: 'Mkey/s', 3: 'Gkey/s', 4: 'Tkey/s', 5: 'Pkey/s', 6: 'Ekeys/s'} 
-    num *= 1.0 
-    idx = 0 
-    for ii in range(len(dict_suffix) - 1): 
-        if int(num / 1000) > 0: 
-            idx += 1 
-            num /= 1000 
-        else: 
-            break 
-    return f"{num:.2f}", dict_suffix[idx]
-    
 class KeyspaceScannerThread(QThread):
     btc_hunter_finished = pyqtSignal(str, str)
     grid_data_ready = pyqtSignal(list)
@@ -295,118 +189,6 @@ class BtcHunterThread_online(QThread):
         self.quit()
         self.wait()
         
-class KnightRiderWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update)
-        self.position = 0
-        self.direction = 1
-        self.lightWidth = 20
-        self.lightHeight = 10
-        self.lightSpacing = 10
-        self.lightColor = QColor(255, 0, 0)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-    def startAnimation(self):
-        self.timer.start(1)
-
-    def stopAnimation(self):
-        self.timer.stop()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(Qt.PenStyle.NoPen)
-
-        for i in range(12):
-            lightX = self.position + i * (self.lightWidth + self.lightSpacing)
-            lightRect = QRect(lightX, 0, self.lightWidth, self.lightHeight)
-            painter.setBrush(self.lightColor)
-            painter.drawRoundedRect(lightRect, 5, 5)
-
-    def update(self):
-        self.position += self.direction
-        if self.position <= 0 or self.position >= self.width() - self.lightWidth - self.lightSpacing:
-            self.direction *= -1
-        self.repaint()
-
-    def setLightColor(self, color):
-        self.lightColor = color
-        self.repaint()
-        
-class MatrixDrop:
-    def __init__(self, col, max_rows):
-        self.col = col
-        self.max_rows = max_rows
-        self.row = random.randint(-10, -1)
-        self.speed = random.randint(1, 3)
-
-    def move(self):
-        self.row += self.speed
-
-    def is_visible(self):
-        return 0 <= self.row < self.max_rows
-
-class Smoke_up:
-    def __init__(self, row, col, max_rows):
-        self.row = row
-        self.col = col
-        self.max_rows = max_rows
-        self.speed = random.randint(1, 5)
-        self.ttl = random.randint(15, 30)
-
-    def move(self):
-        self.row -= self.speed
-        self.ttl -= 1
-
-    def is_visible(self):
-        return 0 <= self.row < self.max_rows and self.ttl > 0
-
-class LavaBubble:
-    def __init__(self, row, col, max_rows):
-        self.row = row
-        self.col = col
-        self.max_rows = max_rows
-        self.direction = random.choice([-1, 1])
-        self.speed = random.uniform(0.5, 2.0)
-        self.size = random.randint(1, 3)
-        self.ttl = random.randint(15, 30)
-
-    def move(self):
-        self.row += self.direction * self.speed
-        self.ttl -= 1
-        if random.random() < 0.1:
-            self.direction *= -1
-
-    def is_visible(self):
-        return 0 <= self.row < self.max_rows and self.ttl > 0
-
-class blocking_grid:
-    def __init__(self, row, col, max_rows):
-        self.row = row
-        self.col = col
-        self.max_rows = max_rows
-        self.speed = random.randint(1, 5)
-        self.ttl = random.randint(15, 30)
-        self.direction = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
-
-    def move(self):
-
-        self.row += self.direction[0] * self.speed
-        self.col += self.direction[1] * self.speed
-        self.row = max(0, min(self.row, self.max_rows - 1))
-        self.col = max(0, min(self.col, self.max_rows - 1))
-        
-        self.ttl -= 1
-
-        if random.random() < 0.2:
-            self.direction = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
-
-    def is_visible(self):
-        return 0 <= self.row < self.max_rows and self.ttl > 0
-        
 class App(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -434,33 +216,15 @@ class App(QMainWindow):
         self.jump_backward_timer = QTimer(self)
         self.animation_timer = None
         self.keyspace_scanner_thread = None
-        self.dark_scanner_thread = None
         self.online_check_balance = False
-        self.matrix_drops = []
-        self.matrix_bubbles = []
-        self.blocks_work = []
         self.init_ui()
 
     def init_ui(self):
         self.setWindowIcon(QIcon('miz.ico'))
         self.setStyleSheet("font-size: 14px; font-family: Calibri;")
-        cpu_count = multiprocessing.cpu_count()
         self.keyspace_scanner_thread = KeyspaceScannerThread(0, 0)
         self.keyspace_scanner_thread.btc_hunter_finished.connect(self.on_btc_hunter_finished)
-        self.dark_scanner_thread = DarkspaceScannerThread(0, 0, 0)
-        self.dark_scanner_thread.btc_hunter_finished.connect(self.on_btc_hunter_finished)
-        self.matrix_timer = QTimer(self)
-        self.matrix_timer.timeout.connect(self.matrix_rain)
-        self.matrix_timer_random = QTimer(self)
-        self.matrix_timer_random.timeout.connect(self.random_matrix)
-        self.run_forever_timer = QTimer(self)
-        self.run_forever_timer.timeout.connect(self.mnemonic_ran)
-        self.Smoke_ups_timer = QTimer(self)
-        self.Smoke_ups_timer.timeout.connect(self.Smoke_ups)
-        self.Lava_bubbles_timer = QTimer(self)
-        self.Lava_bubbles_timer.timeout.connect(self.Lava_bubbles)
-        self.blocks_timer = QTimer(self)
-        self.blocks_timer.timeout.connect(self.blocks_run)
+
         # Create a menu bar
         menubar = self.menuBar()
         file_menu = menubar.addMenu("File")
@@ -521,7 +285,7 @@ class App(QMainWindow):
         self.colorComboBox.addItem("Option 4: Yellow Background, Blue Box")
         self.colorComboBox.addItem("Option 5: Red Background, Black Box")
         self.colorComboBox.addItem("Option 6: Black Background, Yellow Box")
-        self.colorComboBox.currentIndexChanged.connect(self.update_knight_rider_color)
+        self.colorComboBox.currentIndexChanged.connect(self.update_color)
         self.colourLayout.addWidget(self.colorlable)
         self.colourLayout.addWidget(self.colorComboBox)
         self.colourGroupBox.setLayout(self.colourLayout)
@@ -630,73 +394,9 @@ class App(QMainWindow):
         self.btn_start_stop.setStyleSheet("color: green")
         self.btn_start_stop.clicked.connect(self.start_stop)
         buttons_layout.addWidget(self.btn_start_stop)
-        
-        self.pattern_dropdown = QComboBox()
-        self.pattern_dropdown.addItem("Conway")
-        self.pattern_dropdown.addItem("High Life")
-        self.pattern_dropdown.addItem("Maze")
-        self.pattern_dropdown.addItem("Crystallization")
-        self.pattern_dropdown.addItem("Castle Walls")
-        buttons_layout.addWidget(self.pattern_dropdown)
-        self.btn_game_of_life = QPushButton('Start Game of Life Patterns')
-        self.btn_game_of_life.setStyleSheet("color: Green")
-        self.btn_game_of_life.clicked.connect(self.start_game_of_life)
-        buttons_layout.addWidget(self.btn_game_of_life)
-
-        rain_layout = QHBoxLayout()
-        rain_layout1 = QHBoxLayout()
-        self.btn_matrix = QPushButton('Start Matrix Random')
-        self.btn_matrix.setStyleSheet("color: green")
-        self.btn_matrix.clicked.connect(self.start_stop_random)
-        rain_layout.addWidget(self.btn_matrix)
-        self.num_random_matrix = QComboBox()
-        self.num_random_matrix.addItems(['1', '4', '6', '8', '10', '12', '14', '16'])
-        self.num_random_matrix.setCurrentIndex(3)
-        rain_layout.addWidget(self.num_random_matrix)
-        self.btn_rain = QPushButton('Start Matrix Rain')
-        self.btn_rain.setStyleSheet("color: green")
-        self.btn_rain.clicked.connect(self.start_stop_matrix)
-        rain_layout.addWidget(self.btn_rain)
-        self.num_drops_selector = QComboBox()
-        self.num_drops_selector.addItems(['1', '8', '32', '64', '128', '256', '512'])
-        self.num_drops_selector.setCurrentIndex(3)
-        rain_layout.addWidget(self.num_drops_selector)
-        
-        self.btn_Smoke_ups = QPushButton('Start Smoke')
-        self.btn_Smoke_ups.setStyleSheet("color: green")
-        self.btn_Smoke_ups.clicked.connect(self.start_stop_Smoke_ups)
-        rain_layout.addWidget(self.btn_Smoke_ups)
-
-        self.num_Smoke_ups_selector = QComboBox()
-        self.num_Smoke_ups_selector.addItems(['1', '5', '10', '20', '30', '40', '50', '60'])
-        self.num_Smoke_ups_selector.setCurrentIndex(3)
-        rain_layout.addWidget(self.num_Smoke_ups_selector)
-        
-        self.btn_Lava_bubbles = QPushButton('Start Lava')
-        self.btn_Lava_bubbles.setStyleSheet("color: green")
-        self.btn_Lava_bubbles.clicked.connect(self.start_stop_Lava_bubbles)
-        rain_layout1.addWidget(self.btn_Lava_bubbles)
-
-        self.num_Lava_bubbles_selector = QComboBox()
-        self.num_Lava_bubbles_selector.addItems(['1', '2', '4', '6', '8', '10', '20', '30'])
-        self.num_Lava_bubbles_selector.setCurrentIndex(3)
-        rain_layout1.addWidget(self.num_Lava_bubbles_selector)
-        
-        self.btn_blocks = QPushButton('Start Blocks')
-        self.btn_blocks.setStyleSheet("color: green")
-        self.btn_blocks.clicked.connect(self.start_stop_blocks)
-        rain_layout1.addWidget(self.btn_blocks)
-
-        self.num_block_selector = QComboBox()
-        self.num_block_selector.addItems(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
-        self.num_block_selector.setCurrentIndex(3)
-        rain_layout1.addWidget(self.num_block_selector)
-        
         scanning_controls_layout.addLayout(buttons_layout)
-        scanning_controls_layout.addLayout(rain_layout)
-        scanning_controls_layout.addLayout(rain_layout1)
-        center_layout.addWidget(scanning_controls_group_box)
 
+        center_layout.addWidget(scanning_controls_group_box)
         forward_group_box = QGroupBox(self)
         forward_group_box.setTitle("Forward Scanning Configuration")
         forward_group_box.setStyleSheet("QGroupBox { border: 3px solid red; padding: 7px; font-size: 14px; font-weight: bold; color: black;}")
@@ -725,30 +425,21 @@ class App(QMainWindow):
         
         center_layout.addWidget(backward_group_box)
         
-        self.speedGroupBox = QGroupBox(self)
-        self.speedGroupBox.setTitle("Speed Left faster Right Slower")
-        self.speedGroupBox.setStyleSheet("QGroupBox { border: 3px solid red; padding: 7px; font-size: 14px; font-weight: bold; color: black;}")
-        speed_layout = QHBoxLayout(self.speedGroupBox)
-        self.speed_slider = QSlider(Qt.Orientation.Horizontal)
-        self.speed_slider.setMinimum(0)
-        self.speed_slider.setMaximum(200)
-        self.speed_slider_value_display = QLabel(self)
-        speed_layout.addWidget(self.speed_slider)
-        speed_layout.addWidget(self.speed_slider_value_display)
-        center_layout.addWidget(self.speedGroupBox)
-        self.speed_slider.valueChanged.connect(self.update_speed_label)
-        
-        self.knightRiderWidget = KnightRiderWidget(self)
-        self.knightRiderWidget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.knightRiderWidget.setMinimumHeight(25)
+        # Create KnightRiderWidget for visual feedback
+        self.knightRiderWidget = knightrider_gui.KnightRiderWidget(self)
+        self.knightRiderWidget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.knightRiderWidget.setMinimumHeight(20)
+
         self.knightRiderLayout = QHBoxLayout()
-        self.knightRiderLayout.setContentsMargins(10, 10, 10, 10)
+        self.knightRiderLayout.setContentsMargins(10, 15, 10, 10)
         self.knightRiderLayout.addWidget(self.knightRiderWidget)
 
         self.knightRiderGroupBox = QGroupBox(self)
-        self.knightRiderGroupBox.setTitle("Running Process ")
-        self.knightRiderGroupBox.setStyleSheet("QGroupBox { border: 3px solid red; padding: 7px; font-size: 14px; font-weight: bold; color: black;}")
+        self.knightRiderGroupBox.setObjectName("knightrider")
         self.knightRiderGroupBox.setLayout(self.knightRiderLayout)
+
         self.mizogg_label = QLabel(mizogg, self)
         self.mizogg_label.setStyleSheet("font-size: 17px; font-weight: bold; color: red;")
         self.mizogg_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -983,20 +674,6 @@ class App(QMainWindow):
         right_layout.addLayout(balance_transactions_layout)
         right_layout.addLayout(received_sent_layout)
         
-        dark_button_layout = QHBoxLayout()
-        self.dark_start_keyspace = QPushButton()
-        self.dark_start_keyspace.setText('🔥Start Dark Space🔥')
-        self.dark_start_keyspace.setStyleSheet("color: green")
-        self.dark_start_keyspace.clicked.connect(self.darkspace)
-        dark_button_layout.addWidget(self.dark_start_keyspace)
-        cpu_label = QLabel('Number of CPUS :')
-        cpu_label.setStyleSheet("color: blue")
-        dark_button_layout.addWidget(cpu_label)
-        self.cpu_box = QComboBox()
-        for i in range(1, cpu_count + 1):
-            self.cpu_box.addItem(str(i))
-        dark_button_layout.addWidget(self.cpu_box)
-        right_layout.addLayout(dark_button_layout)
         right_layout.addWidget(self.knightRiderGroupBox)
         right_layout.addWidget(self.mizogg_label)
         main_layout.addStretch()
@@ -1005,10 +682,6 @@ class App(QMainWindow):
         self.canvas.mouseMoveEvent = self.canvas_mouse_move_event
         self.canvas.mouseReleaseEvent = self.canvas_mouse_release_event
         self.show()
-    
-    def update_speed_label(self):
-        actual_speed = self.speed_slider.value()
-        self.speed_slider_value_display.setText(str(actual_speed))
     
     def open_browser(self, address):
         url = f'https://www.blockchain.com/explorer/addresses/btc/{address}'
@@ -1082,38 +755,6 @@ class App(QMainWindow):
             self.keyspace_scanner_thread.start()
             self.btn_start_keyspace.setText('🚫Stop Key Space🚫')
             self.btn_start_keyspace.setStyleSheet("color: red")
-            self.scanning = True
-            self.knightRiderWidget.startAnimation()
-        self.btn_start_stop.setEnabled(True)
-        
-    def darkspace(self):
-        key_space_range = self.keyspaceLineEdit.text().strip()
-        start_hex, end_hex = key_space_range.split(':')
-        num_cpus = int(self.cpu_box.currentText())
-        try:
-            start_value = int(start_hex, 16)
-            end_value = int(end_hex, 16)
-        except InvalidOperation:
-            self.pop_Result("Invalid key space range. Please enter a valid hexadecimal range.")
-            return
-        if start_value > end_value:
-            self.pop_Result("Invalid key space range. Start value must be less than or equal to end value.")
-            return
-        if self.dark_scanner_thread and self.dark_scanner_thread.isRunning():
-            self.dark_scanner_thread.stop()
-            self.dark_scanner_thread.wait()
-            self.dark_scanner_thread = None
-            self.dark_start_keyspace.setText('🔥Start Dark Space🔥')
-            self.dark_start_keyspace.setStyleSheet("color: green")
-            self.scanning = False
-            self.knightRiderWidget.stopAnimation()
-        else:
-            self.dark_scanner_thread = DarkspaceScannerThread(start_value, end_value, num_cpus)
-            self.dark_scanner_thread.btc_hunter_finished.connect(self.on_btc_hunter_finished)
-            self.dark_scanner_thread.grid_data_ready.connect(self.grid_data_ready)
-            self.dark_scanner_thread.start()
-            self.dark_start_keyspace.setText('🚫Stop Dark Space🚫 (Will Close GUI)')
-            self.dark_start_keyspace.setStyleSheet("color: red")
             self.scanning = True
             self.knightRiderWidget.startAnimation()
         self.btn_start_stop.setEnabled(True)
@@ -1561,300 +1202,7 @@ class App(QMainWindow):
             self.btn_clear.setEnabled(False)
             self.scanning = True
             self.knightRiderWidget.startAnimation()
-            
-    def start_game_of_life(self):
-        self.scanning_speed = self.speed_slider.value()
-        if self.is_active:
-            self.is_active = False
-            self.btn_game_of_life.setText('✅Start Game of Life Patterns✅')
-            self.btn_game_of_life.setStyleSheet("color: Green")
-            self.btn_game_of_life.setEnabled(True)
-            self.btn_seed.setEnabled(True)
-            self.btn_clear.setEnabled(True)
-            if self.animation_timer is not None:
-                self.animation_timer.stop()
-                self.animation_timer = None
-        else:
-            self.is_active = True
-            self.btn_game_of_life.setText('🚫Stop Game of Life Patterns🚫')
-            self.btn_game_of_life.setStyleSheet("color: red")
-            self.btn_game_of_life.setEnabled(True)
-            self.btn_seed.setEnabled(False)
-            self.btn_clear.setEnabled(False)
-            self.game_of_life()
-    
-    def setup_animation_timer(self):
-        self.animation_timer = QTimer()
-        self.animation_timer.timeout.connect(self.game_of_life)
-        self.animation_timer.start(self.scanning_speed)
-    
-    def game_of_life(self):
-        selected_pattern = self.pattern_dropdown.currentText()
-        self.scanning_speed = self.speed_slider.value()
-        patterns = {
-            'Conway': lambda neighbors: 1 if neighbors == 3 else (1 if neighbors == 2 and self.grid[rw][cl] else 0),
-            'High Life': lambda neighbors: 1 if neighbors in (3, 6) else (1 if neighbors == 2 and self.grid[rw][cl] else 0),
-            'Maze': lambda neighbors: 1 if neighbors in (1, 2, 3, 4, 5) else 0,
-            'Crystallization': lambda neighbors: 1 if neighbors == 4 else (1 if neighbors == 3 or neighbors == 8 else 0),
-            'Castle Walls': lambda neighbors: 1 if neighbors == 2 or neighbors == 3 else (1 if neighbors == 4 or neighbors == 5 else 0),
-        }
 
-        if selected_pattern in patterns:
-            next_grid = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
-
-            for rw in range(self.rows):
-                for cl in range(self.cols):
-                    neighbors = self.count_neighbors(rw, cl)
-                    next_grid[rw][cl] = patterns[selected_pattern](neighbors)
-
-            for row, blocked in enumerate(self.horizontal_blocking_checkboxes):
-                if blocked.isChecked():
-                    for col in range(self.cols):
-                        self.grid[row][col] = 0
-
-            for col, blocked in enumerate(self.vertical_blocking_checkboxes):
-                if blocked.isChecked():
-                    for row in range(self.rows):
-                        self.grid[row][col] = 0
-
-            self.grid = next_grid
-            self.update_canvas()
-            self.btc_hunter()
-
-            if any(any(cell == 1 for cell in row) for row in self.grid) and self.is_active:
-                QTimer.singleShot(self.scanning_speed, self.game_of_life)
-            else:
-                self.is_active = False
-                self.btn_game_of_life.setText('Start Game of Life Patterns')
-                self.btn_game_of_life.setStyleSheet("color: green")
-                self.btn_game_of_life.setEnabled(True)
-                self.btn_seed.setEnabled(True)
-                self.btn_clear.setEnabled(True)
-
-
-    def count_neighbors(self, row, col):
-        count = 0
-        for dr in [-1, 0, 1]:
-            for dc in [-1, 0, 1]:
-                if dr == 0 and dc == 0:
-                    continue
-                nr, nc = row + dr, col + dc
-                if 0 <= nr < self.rows and 0 <= nc < self.cols and self.grid[nr][nc] == 1:
-                    count += 1
-        return count
-        
-    def start_stop_random(self):
-        self.scanning_speed = self.speed_slider.value()
-        if self.matrix_timer_random.isActive():
-            self.matrix_timer_random.stop()
-            self.btn_matrix.setText('Start Matrix Random')
-            self.btn_matrix.setStyleSheet("color: green")
-            self.scanning = False
-            self.knightRiderWidget.stopAnimation()
-        else:
-            self.matrix_timer_random.start(self.scanning_speed)
-            self.btn_matrix.setText('🚫Stop Matrix Random🚫')
-            self.btn_matrix.setStyleSheet("color: red")
-            self.scanning = True
-            self.knightRiderWidget.startAnimation()
-            
-    def random_matrix(self):
-        num_new_drops = int(self.num_random_matrix.currentText())
-        for rw in range(self.rows):
-            if random.random() < 0.1:
-                num_drops = random.randint(1, num_new_drops)
-                drop_positions = random.sample(range(self.cols), num_drops)
-                for cl in range(self.cols):
-                    if cl in drop_positions:
-                        self.grid[rw][cl] = 1
-                    else:
-                        self.grid[rw][cl] = 0
-
-        for row, blocked in enumerate(self.horizontal_blocking_checkboxes):
-            if blocked.isChecked():
-                for col in range(self.cols):
-                    self.grid[row][col] = 0
-
-        for col, blocked in enumerate(self.vertical_blocking_checkboxes):
-            if blocked.isChecked():
-                for row in range(self.rows):
-                    self.grid[row][col] = 0
-        
-        self.update_canvas()
-    
-    def start_stop_Smoke_ups(self):
-        self.scanning_speed = self.speed_slider.value()
-        if self.Smoke_ups_timer.isActive():
-            self.Smoke_ups_timer.stop()
-            self.btn_Smoke_ups.setText('Start Smoke')
-            self.btn_Smoke_ups.setStyleSheet("color: green")
-            self.scanning = False
-            self.knightRiderWidget.stopAnimation()
-        else:
-            self.Smoke_ups_timer.start(self.scanning_speed)
-            self.btn_Smoke_ups.setText('🚫Stop Smoke🚫')
-            self.btn_Smoke_ups.setStyleSheet("color: red")
-            self.scanning = True
-            self.knightRiderWidget.startAnimation()
-
-    def Smoke_ups(self):
-        self.matrix_drops = [drop for drop in self.matrix_drops if drop.is_visible()]
-        num_new_Smoke_ups = int(self.num_Smoke_ups_selector.currentText())
-        for _ in range(num_new_Smoke_ups):
-            row = random.randint(self.rows // 2, self.rows)
-            col = random.randint(0, self.cols - 1)
-            self.matrix_drops.append(Smoke_up(row, col, self.rows))
-
-        for drop in self.matrix_drops:
-            drop.move()
-
-        self.init_grid()
-
-        for drop in self.matrix_drops:
-            if drop.is_visible():
-                self.grid[drop.row][drop.col] = 1
-        for row, blocked in enumerate(self.horizontal_blocking_checkboxes):
-            if blocked.isChecked():
-                for col in range(self.cols):
-                    self.grid[row][col] = 0
-
-        for col, blocked in enumerate(self.vertical_blocking_checkboxes):
-            if blocked.isChecked():
-                for row in range(self.rows):
-                    self.grid[row][col] = 0
-        self.update_canvas()
-    
-    def start_stop_Lava_bubbles(self):
-        self.scanning_speed = self.speed_slider.value()
-        if self.Lava_bubbles_timer.isActive():
-            self.Lava_bubbles_timer.stop()
-            self.btn_Lava_bubbles.setText('Start Lava')
-            self.btn_Lava_bubbles.setStyleSheet("color: green")
-            self.scanning = False
-            self.knightRiderWidget.stopAnimation()
-        else:
-            self.Lava_bubbles_timer.start(self.scanning_speed)
-            self.btn_Lava_bubbles.setText('🚫Stop Lava🚫')
-            self.btn_Lava_bubbles.setStyleSheet("color: red")
-            self.scanning = True
-            self.knightRiderWidget.startAnimation()
-
-    def Lava_bubbles(self):
-        self.matrix_bubbles = [bubble for bubble in self.matrix_bubbles if bubble.is_visible()]
-        num_new_Lava_bubbles = int(self.num_Lava_bubbles_selector.currentText())
-        for _ in range(num_new_Lava_bubbles):
-            row = random.randint(0, self.rows // 2)
-            col = random.randint(0, self.cols - 1)
-            self.matrix_bubbles.append(LavaBubble(row, col, self.rows))
-
-        for bubble in self.matrix_bubbles:
-            bubble.move()
-
-        self.init_grid()
-
-        for bubble in self.matrix_bubbles:
-            if bubble.is_visible():
-                for i in range(bubble.size):
-                    row = int(bubble.row) + i
-                    if 0 <= row < self.rows:
-                        self.grid[row][bubble.col] = 1
-        for row, blocked in enumerate(self.horizontal_blocking_checkboxes):
-            if blocked.isChecked():
-                for col in range(self.cols):
-                    self.grid[row][col] = 0
-
-        for col, blocked in enumerate(self.vertical_blocking_checkboxes):
-            if blocked.isChecked():
-                for row in range(self.rows):
-                    self.grid[row][col] = 0
-        self.update_canvas()
-
-    def start_stop_blocks(self):
-        self.scanning_speed = self.speed_slider.value()
-        if self.blocks_timer.isActive():
-            self.blocks_timer.stop()
-            self.btn_blocks.setText('Start Blocks')
-            self.btn_blocks.setStyleSheet("color: green")
-            self.scanning = False
-            self.knightRiderWidget.stopAnimation()
-        else:
-            self.blocks_timer.start(self.scanning_speed)
-            self.btn_blocks.setText('🚫Stop Blocks🚫')
-            self.btn_blocks.setStyleSheet("color: red")
-            self.scanning = True
-            self.knightRiderWidget.startAnimation()
-
-    def blocks_run(self):
-        self.blocks_work = [block for block in self.blocks_work if block.is_visible()]
-        num_block_selector = int(self.num_block_selector.currentText())
-        row = random.randint(0, self.rows // 2)
-        col = random.randint(0, self.cols - 1)
-        self.blocks_work.append(blocking_grid(row, col, self.rows))
-
-        for block in self.blocks_work:
-            block.move()
-
-        self.init_grid()
-
-        for block in self.blocks_work:
-            if block.is_visible():
-                for i in range(num_block_selector):
-                    row = int(block.row) + i
-                    if 0 <= row < self.rows:
-                        self.grid[row][block.col] = 1
-        for row, blocked in enumerate(self.horizontal_blocking_checkboxes):
-            if blocked.isChecked():
-                for col in range(self.cols):
-                    self.grid[row][col] = 0
-
-        for col, blocked in enumerate(self.vertical_blocking_checkboxes):
-            if blocked.isChecked():
-                for row in range(self.rows):
-                    self.grid[row][col] = 0
-        self.update_canvas()
-        
-    def start_stop_matrix(self):
-        self.scanning_speed = self.speed_slider.value()
-        if self.matrix_timer.isActive():
-            self.matrix_timer.stop()
-            self.btn_rain.setText('Start Matrix Rain')
-            self.btn_rain.setStyleSheet("color: green")
-            self.scanning = False
-            self.knightRiderWidget.stopAnimation()
-        else:
-            self.matrix_timer.start(self.scanning_speed)
-            self.btn_rain.setText('🚫Stop Matrix Rain🚫')
-            self.btn_rain.setStyleSheet("color: red")
-            self.scanning = True
-            self.knightRiderWidget.startAnimation()
-        
-    def matrix_rain(self):
-        self.matrix_drops = [drop for drop in self.matrix_drops if drop.is_visible()]
-        num_new_drops = int(self.num_drops_selector.currentText())
-        for _ in range(num_new_drops):
-            if random.random() < 0.1:
-                col = random.randint(0, self.cols - 1)
-                self.matrix_drops.append(MatrixDrop(col, self.rows))
-
-        for drop in self.matrix_drops:
-            drop.move()
-
-        self.init_grid()
-
-        for drop in self.matrix_drops:
-            if drop.is_visible():
-                self.grid[drop.row][drop.col] = 1
-        for row, blocked in enumerate(self.horizontal_blocking_checkboxes):
-            if blocked.isChecked():
-                for col in range(self.cols):
-                    self.grid[row][col] = 0
-
-        for col, blocked in enumerate(self.vertical_blocking_checkboxes):
-            if blocked.isChecked():
-                for row in range(self.rows):
-                    self.grid[row][col] = 0
-        self.update_canvas()
-        
     def update_grid(self):
         hex_value = self._txt_inputhex.text()
         scene = self.canvas.scene()
@@ -1889,7 +1237,7 @@ class App(QMainWindow):
         self.lbl_tick_no.setText('🔑 Total Private Keys Scanned 🔑: %d' % self.tick_count)
         self.lbl_total_no.setText('₿ Total Addresses Scanned ₿: %d' % self.addr_count)
         
-    def update_knight_rider_color(self, index):
+    def update_color(self, index):
         if index == 1:
             color = QColor(128, 0, 128)
             self.on_cell_color = QColor(128, 0, 128)
@@ -1932,7 +1280,6 @@ class App(QMainWindow):
         self.colorlable.setStyleSheet(color_lab)
         welcome = f"font-size: 30px; font-weight: bold; color: {color.name()};"
         self.welcome_label.setStyleSheet(welcome)
-        self.knightRiderWidget.setLightColor(color)
 
     def tick(self):
         if self.in_tick:
