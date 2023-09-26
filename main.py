@@ -23,17 +23,7 @@ from libs import team_balance
 from libs import create_setting
 from libs import set_settings
 from libs import load_bloom
-from gui import knightrider_gui
-from gui import bar_gui
-from gui import win_gui
-from gui import up_bloom_gui
-from gui import balance_gui
-from gui import show_ranges_gui
-from gui import range_div_gui
-from gui import conversion_gui
-from gui import telegram_gui
-from gui import discord_gui
-from gui import about_gui
+from gui import *
 import qdarktheme
 import requests
 import datetime
