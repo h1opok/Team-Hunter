@@ -1,0 +1,126 @@
+GUIInstance {
+    background-color: #DBDBDB;
+}
+
+QComboBox {
+    background-color: #DBDBDB;
+    color: #000000;    
+}
+
+QPushButton#startButton, 
+QPushButton#stopButton, 
+QPushButton#addRange, 
+QPushButton#showRange {
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 10px 20px;
+}
+
+QPushButton#startButton {
+    background-color: #4CAF50;
+    border: none;
+}
+
+QPushButton#startButton:hover {
+    background-color: #3A863D;
+}
+
+QPushButton#stopButton {
+    background-color: #FF5722;
+    border: none;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #993414;
+}
+
+QPushButton#addRange,
+QPushButton#showRange {
+    background-color: #1A73E8;
+}
+
+QPushButton#addRange:hover,
+QPushButton#showRange:hover {
+    background-color: #1662C6;
+}
+
+QRadioButton,
+QCheckBox {
+    color: #000000;
+    font-size: 16px;
+    padding: 8px;
+    margin: 4px;
+}
+
+QRadioButton::checked,
+QCheckBox::checked {
+    color: #000000;
+    background-color: #C6C6C6;
+    border-radius: 20px;
+    font-size: 16px;
+    padding: 8px;
+    margin: 4px;
+}
+
+QRadioButton::indicator,
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+QRadioButton::indicator:checked,
+QCheckBox::indicator:checked {
+    background-color: #C6C6C6;
+    border-radius: 8px;
+}
+
+QRadioButton::indicator:unchecked,
+QCheckBox::indicator:unchecked {
+    background-color: #DBDBDB;
+    border-radius: 8px;
+}
+
+QProgressBar {
+    color: #000000;
+    background: #DBDBDB;
+    border: 1px solid #7D7D7D;
+}
+
+QProgressBar::chunk {
+    color: #000000;
+    background-color: #1A73E8;
+}
+
+QLabel#madeby,
+QLabel#version,
+QLabel#copyright,
+QLabel#versionpy,
+QLabel#dot1,
+QLabel#dot2,
+QLabel#dot3,
+QLabel#titlelabel {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+QLabel#dot1,
+QLabel#dot2,
+QLabel#dot3 {
+    color: #1A73E8;
+}
+
+QLabel#count_addlabel {
+    color: #333333;
+    font-size: 14px;
+}
+
+QLabel#titlelabel {
+    color: #333333;
+    font-size: 22px;
+}
+
+QGroupBox#knightrider {
+    border: 2px solid #FF0000;
+    background-color: #DBDBDB;
+    border-radius: 5px;
+}
