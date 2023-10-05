@@ -1,0 +1,27 @@
+QCheckBox::hover {
+    border-width: 0px;    
+}
+
+QRadioButton {
+    max-width: 100px;
+}
+
+QRadioButton::hover {
+    border-width: 0px;
+}
+
+QLabel#powerLabel {
+    font-size: 14px;
+    padding: 0px 0px 0px 10px;
+}
+
+QComboBox {
+    border: 0px;
+    max-width: 100px;
+    font-weight: bold;
+    margin: 0px;
+}
+
+QComboBox::down-arrow {
+    width: 0;
+}

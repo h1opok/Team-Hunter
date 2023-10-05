@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Hunter GUI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        header {
+            text-align: center;
+            background-color: #E7481F;
+            color: white;
+            padding: 20px;
+        }
+        
+        header img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+        
+        nav li {
+            display: inline;
+            margin: 0 10px;
+        }
+        
+        .button {
+            background-color: #E7481F;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        main {
+            padding: 20px;
+        }
+        
+        aside {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            background-color: #E7481F;
+            color: white;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Team Hunter GUI</h1>
+        <img src="title.png" alt="Title Image" />
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <!-- Add more menu items as needed -->
+        </ul>
+    </nav>
+
+    <main>
+		<div class="button" id="startButton">Start OpenCL</div>
+		<div class="button" id="startButtonCuda">Start Cuda</div>
+		<div class="button" id="stopButton">Stop</div>
+		
+		<label for="blocksSize">Block Size:</label>
+		<select id="blocksSize">
+			<option value="8">8</option>
+			<option value="16">16</option>
+			<option value="24">24</option>
+			<!-- Add more options as needed -->
+		</select>
+		
+		<label for="threadCount">Number of Threads:</label>
+		<select id="threadCount">
+			<option value="32">32</option>
+			<option value="64">64</option>
+			<option value="96">96</option>
+			<!-- Add more options as needed -->
+		</select>
+		
+		<label for="pointsSize">Points Size:</label>
+		<select id="pointsSize">
+			<option value="256">256</option>
+			<option value="512">512</option>
+			<option value="1024">1024</option>
+			<!-- Add more options as needed -->
+		</select>
+		
+		<label for="gpuIds">List of GPU(s) to use:</label>
+		<input type="text" id="gpuIds" placeholder="0, 1, 2">
+		
+		<label for="keyspace">Key Space:</label>
+		<input type="text" id="keyspace" placeholder="Example range for 66 = 20000000000000000:3ffffffffffffffff">
+		
+		<div class="button" id="checkGpuButton">Check GPU</div>
+		<div class="button" id="checkBalanceButton">Check Balance</div>
+		<div class="button" id="convCheckButton">Conversion Tools</div>
+		<div class="button" id="rangeCheckButton">Range Division</div>
+		
+		<label for="lookType">Look Type:</label>
+		<select id="lookType">
+			<option value="compress">compress</option>
+			<option value="uncompress">uncompress</option>
+		</select>
+		
+		<label for="inputFile">Input File:</label>
+		<input type="text" id="inputFile" placeholder="Click browse to find your BTC database">
+		<div class="button" id="browseButton">Browse</div>
+		
+		<label for="saveProgress">💾 Save Progress 💾</label>
+		<input type="checkbox" id="saveProgress" checked>
+		
+		<div class="button" id="checkProgressButton">💾 Check Progress 💾</div>
+		<div class="button" id="checkIfFoundButton">🔥 Check if Found 🔥</div>
+		
+		<h2>{{ price }}</h2>
+
+		
+	</main>
+
+
+    <aside>
+        <p>Made by Team Mizogg</p>
+        <p>Version 1.0</p>
+        <!-- Add more content as needed -->
+    </aside>
+
+    <footer>
+        <p>© mizogg.com 2018 - 2023</p>
+        <!-- Add more footer content as needed -->
+    </footer>
+
+	<!-- Add this script section at the end of your HTML file -->
+<script>
+   // Function to handle the "Check GPU" button click
+	document.getElementById("checkGpuButton").addEventListener("click", function() {
+		// Send an AJAX request to the server to list GPUs
+		fetch("/list_gpu")
+			.then(response => response.json())
+			.then(data => {
+				// Display the GPU list in the <pre> element
+				document.getElementById("output").textContent = data.output;
+			})
+			.catch(error => {
+				console.error("Error:", error);
+			});
+	});
+
+
+    // Function to handle the "Start OpenCL" button click
+    document.getElementById("startButton").addEventListener("click", function() {
+        // Send an AJAX request to the server to start OpenCL
+        fetch("/start_opencl") // Replace with the actual server endpoint
+            .then(response => response.text())
+            .then(data => {
+                // Display the output in the console or an alert
+                console.log(data); // You can also display it in an alert: alert(data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+    });
+
+    // Function to handle the "Start Cuda" button click
+    document.getElementById("startButtonCuda").addEventListener("click", function() {
+        // Send an AJAX request to the server to start Cuda
+        fetch("/start_cuda") // Replace with the actual server endpoint
+            .then(response => response.text())
+            .then(data => {
+                // Display the output in the console or an alert
+                console.log(data); // You can also display it in an alert: alert(data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+    });
+
+    // Function to handle the "Stop" button click
+    document.getElementById("stopButton").addEventListener("click", function() {
+        // Send an AJAX request to the server to stop the hunt
+        fetch("/stop_hunt") // Replace with the actual server endpoint
+            .then(response => response.text())
+            .then(data => {
+                // Display the output in the console or an alert
+                console.log(data); // You can also display it in an alert: alert(data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+    });
+
+    // Add more button event listeners as needed for other buttons
+
+</script>
+
+</body>
+</html>
