@@ -1,0 +1,6 @@
+// Choose default theme [light] / [dark]
+theme=dark
+
+// Telegram Settings
+token=
+chatid=
