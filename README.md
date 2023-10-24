@@ -17,3 +17,30 @@ Stay tuned for our crypto concoctions that will have you laughing all the way to
 
 ![_c87420ff-3a34-461c-bbed-e2a30d84922f](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/0b00f7f5-d1a5-48a8-a455-41af274e5cb1)
 
+
+
+#Requirements 
+
+https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019
+
+Python 3.11
+
+PyQt6
+pyqtdarktheme
+requests
+base58
+ecdsa
+webbrowser
+PyQt6-WebEngine
+simplebloomfilter
+bitarray==1.9.2
+hdwallet
+mnemonic
+
+#How to Run
+python TeamHunter_main.py 
+This Version Requires PyQt6-WebEngine Which some user cannot install
+
+python TeamHunter_basic.py
+It does not require PyQt6-WebEngine
+
