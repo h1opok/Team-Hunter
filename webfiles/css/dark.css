@@ -1,0 +1,96 @@
+QComboBox {
+    background-color: #202124;
+    color: #FFFFFF;
+}
+
+QPushButton#startButton,
+QPushButton#stopButton,
+QPushButton#addRange,
+QPushButton#showRange {
+    color: white;
+    font-weight: bold;
+    padding: 10px 10px;
+    border: none;
+}
+
+QPushButton#startButton {
+    background-color: #E7481F;
+}
+
+QPushButton#startButton:hover {
+    background-color: #A13316;
+}
+
+QPushButton#stopButton {
+    background-color: #1E1E1E;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #5D6062;
+}
+
+QPushButton#addRange,
+QPushButton#showRange {
+    background-color: #8AB4F7;
+    color: #000000;
+}
+
+QPushButton#addRange:hover,
+QPushButton#showRange:hover {
+    background-color: #769AD3;
+}
+
+QRadioButton,
+QCheckBox {
+    color: #FFFFFF;
+    font-size: 14px;
+    padding: 8px;
+    margin: 4px;
+}
+
+QRadioButton::checked,
+QCheckBox::checked {
+    color: #FFFFFF;
+    background-color: #1B1C1E;
+    border-radius: 20px;
+    font-size: 14px;
+    padding: 8px;
+    margin: 4px;
+}
+
+QRadioButton::indicator,
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+QRadioButton::indicator:checked,
+QCheckBox::indicator:checked {
+    background-color: #000000;
+    border-radius: 8px;
+}
+
+QRadioButton::indicator:unchecked,
+QCheckBox::indicator:unchecked {
+    background-color: #202124;
+    border-radius: 8px;
+}
+
+QLabel#madeby,
+QLabel#version,
+QLabel#copyright,
+QLabel#versionpy {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+QLabel#dot1,
+QLabel#dot2,
+QLabel#dot3 {
+    color: #8AB4F7;
+}
+
+QLabel#titlelabel {
+    color: #777777;
+    font-size: 22px;
+}
