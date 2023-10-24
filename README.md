@@ -21,9 +21,11 @@ Stay tuned for our crypto concoctions that will have you laughing all the way to
 
 #Requirements 
 
+Microsoft Build Tools.
 https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019
 
 Python 3.11
+https://www.python.org/downloads/
 
 PyQt6
 pyqtdarktheme
