@@ -1,9 +1,0 @@
-PyQt6
-simplebloomfilter
-bitarray==1.9.2
-pyqtdarktheme
-requests
-base58
-ecdsa
-gzip
-webbrowser
