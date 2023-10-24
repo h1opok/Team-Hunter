@@ -19,14 +19,14 @@ Stay tuned for our crypto concoctions that will have you laughing all the way to
 
 
 
-#Requirements 
+# Requirements 
 
 Microsoft Build Tools.
 https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019
 
 Python 3.11
 https://www.python.org/downloads/
-
+```
 PyQt6
 pyqtdarktheme
 requests
@@ -38,8 +38,9 @@ simplebloomfilter
 bitarray==1.9.2
 hdwallet
 mnemonic
+```
+# How to Run
 
-#How to Run
 python TeamHunter_main.py 
 This Version Requires PyQt6-WebEngine Which some user cannot install
 
