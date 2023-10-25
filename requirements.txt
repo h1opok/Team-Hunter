@@ -9,3 +9,4 @@ simplebloomfilter
 bitarray==1.9.2
 hdwallet
 mnemonic
+numpy
