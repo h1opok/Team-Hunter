@@ -116,7 +116,7 @@ class VanbitFrame(QMainWindow):
     def update_keyspace_range(self, value, keyspaceLineEdit, slider_value_display):
         if value == 256:
             start_range = hex(2**(value - 1))[2:]
-            end_range = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
+            end_range = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140"
             self.keyspaceLineEdit.setText(f"{start_range}:{end_range}")
             slider_value_display.setText(str(value))
         else:
