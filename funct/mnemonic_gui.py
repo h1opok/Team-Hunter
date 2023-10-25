@@ -98,18 +98,22 @@ class MnemonicFrame(QMainWindow):
 
         self.incrementalEntropyLabel = QLabel("Incremental Entropy (hex):", self)
         self.incrementalEntropyLineEdit = QLineEdit(self)
+        self.incrementalEntropyLineEdit.setPlaceholderText('0000000000000000000000000000000')
+        self.incrementalEntropyLineEdit.setToolTip('<span style="font-size: 12pt; font-weight: bold; color: black;"> Incremental entropy search, in order from specified hex number (Length - 8 , 16, 24 ,32 ,40 ,48 ,56 ,64) HEX characters </span>')
         self.stepLabel = QLabel("Step:", self)
         self.stepLineEdit = QLineEdit(self)
+        self.stepLineEdit.setPlaceholderText('2')
+        self.stepLineEdit.setToolTip('<span style="font-size: 12pt; font-weight: bold; color: black;"> Specify step to add in -entropy mode </span>')
         self.privateKeyIncrementLabel = QLabel("Private Key Increment:", self)
         self.privateKeyIncrementLineEdit = QLineEdit(self)
+        self.privateKeyIncrementLineEdit.setPlaceholderText('2')
+        self.privateKeyIncrementLineEdit.setToolTip('<span style="font-size: 12pt; font-weight: bold; color: black;"> Number of keys for incremental search (PrivateKeys) (+- value to the keys obtained from the mnemonic) </span>')
         self.row1Layout.addWidget(self.incrementalEntropyLabel)
         self.row1Layout.addWidget(self.incrementalEntropyLineEdit)
         self.row1Layout.addWidget(self.stepLabel)
         self.row1Layout.addWidget(self.stepLineEdit)
         self.row1Layout.addWidget(self.privateKeyIncrementLabel)
         self.row1Layout.addWidget(self.privateKeyIncrementLineEdit)
-
-
 
         radio_button_layout = QHBoxLayout()
         modeLabel = QLabel('Mode:')
@@ -139,15 +143,14 @@ class MnemonicFrame(QMainWindow):
         self.languageLabel = QLabel("Language:", self)
         self.languageComboBox = QComboBox(self)
         self.languageComboBox.addItems(['EN', 'CT', 'CS', 'KO', 'JA', 'IT', 'FR', 'SP'])
-
         self.languageComboBox.setToolTip('<span style="font-size: 12pt; font-weight: bold; color: black;"> Pick Language for Generation </span>')
         radio_button_layout.addWidget(self.languageLabel)
         radio_button_layout.addWidget(self.languageComboBox)
 
         div_button_layout = QHBoxLayout()
         self.derivationDepthLabel = QLabel("Derivation Depth:", self)
-        self.derivationDepthLineEdit = QLineEdit(self)
-        self.derivationDepthLineEdit.setToolTip('<span style="font-size: 12pt; font-weight: bold; color: black;"> “derivation path.” Simply put, a derivation path defines a consistent method for generating the same set of accounts and wallets for a given private key </span>')
+        self.derivationDepthLineEdit = QLineEdit('1',self)
+        self.derivationDepthLineEdit.setToolTip('<span style="font-size: 12pt; font-weight: bold; color: black;"> 1-1000 “derivation path.” Simply put, a derivation path defines a consistent method for generating the same set of accounts and wallets for a given private key </span>')
         div_button_layout.addWidget(self.derivationDepthLabel)
         div_button_layout.addWidget(self.derivationDepthLineEdit)
 
