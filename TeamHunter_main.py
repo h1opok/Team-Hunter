@@ -12,7 +12,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 import qdarktheme
 from libs import set_settings, create_setting
-from funct import (range_div_gui, about_gui, ice_gui, bitcrack_gui, keyhunt_gui, vanbit_gui, up_bloom_gui, grid_16x16, mnemonic_gui, rotacuda_gui)
+from funct import (range_div_gui, about_gui, ice_gui, bitcrack_gui, keyhunt_gui, vanbit_gui, up_bloom_gui, grid_16x16, mnemonic_gui, rotacuda_gui, snake_gui)
 import sys
 sys.path.extend(['libs', 'config', 'funct', 'found', 'input'])
 
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Team Hunter GUI")
         self.setWindowIcon(QIcon(f"{ICO_ICON}"))
-        self.setGeometry(50, 50, 680, 680)
+        self.setGeometry(50, 50, 1600, 900)
 
         self.tab_widget = QTabWidget(self)
         self.tab_widget.setObjectName("QTabWidget")
@@ -58,6 +58,8 @@ class MainWindow(QMainWindow):
         self.tab8 = QWidget()
         self.tab9 = QWidget()
         self.tab10 = QWidget()
+        self.tab11 = QWidget()
+        self.tab12 = QWidget()
 
         self.tab_widget.addTab(self.tabmain, "Welcome")
         self.tab_widget.addTab(self.tab1, "BitCrack")
@@ -70,6 +72,8 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.tab8, "Mizogg's Tools")
         self.tab_widget.addTab(self.tab9, "C-Sharp-Mnemonic")
         self.tab_widget.addTab(self.tab10, "Rota Cuda")
+        self.tab_widget.addTab(self.tab11, "BTC Snake Game")
+        self.tab_widget.addTab(self.tab12, "Race Game")
         self.process = None
         self.scanning = False
         self.initUI()
@@ -292,6 +296,8 @@ class MainWindow(QMainWindow):
         self.tab8_layout = QVBoxLayout()
         self.tab9_layout = QVBoxLayout()
         self.tab10_layout = QVBoxLayout()
+        self.tab11_layout = QVBoxLayout()
+        self.tab12_layout = QVBoxLayout()
 
         self.centralWidget = QWidget(self)
         self.setCentralWidget(self.centralWidget)
@@ -303,6 +309,7 @@ class MainWindow(QMainWindow):
         ice_tool = ice_gui.GUIInstance()
         XopMC_tool = mnemonic_gui.MnemonicFrame()
         rota_tool = rotacuda_gui.RotacudaFrame()
+        snake_frame = snake_gui.Window()
         
         self.tabmain_layout = self.main_tab()
         self.tab1_layout.addWidget(bitcrack_tool)
@@ -315,6 +322,8 @@ class MainWindow(QMainWindow):
         self.tab8_layout.addWidget(self.webview_miz)
         self.tab9_layout.addWidget(XopMC_tool)
         self.tab10_layout.addWidget(rota_tool)
+        self.tab11_layout.addWidget(snake_frame)
+        self.tab12_layout.addWidget(self.webview_race)
 
         self.tabmain.setLayout(self.tabmain_layout)
         self.tab1.setLayout(self.tab1_layout)
@@ -327,6 +336,8 @@ class MainWindow(QMainWindow):
         self.tab8.setLayout(self.tab8_layout)
         self.tab9.setLayout(self.tab9_layout)
         self.tab10.setLayout(self.tab10_layout)
+        self.tab11.setLayout(self.tab11_layout)
+        self.tab12.setLayout(self.tab12_layout)
         self.setCentralWidget(self.centralWidget)
 
         self.layout.addLayout(main_layout)
@@ -359,7 +370,7 @@ class MainWindow(QMainWindow):
         labels_layout = QHBoxLayout()
         combined_text = """
         <html><center>
-        <font size="18" color="#E7481F">❤️ Welcome to TeamHunter ₿itcoin Scanner ❤️</font>
+        <font size="16" color="#E7481F">❤️ Welcome to TeamHunter ₿itcoin Scanner ❤️</font>
         <br><br><font size="8" color="#E7481F">
         Good Luck and Happy Hunting Mizogg<br>
         ⭐ https://mizogg.co.uk ⭐
@@ -392,6 +403,7 @@ class MainWindow(QMainWindow):
         self.webview_con = self.setup_webview("/webfiles/conversion.html")
         self.webview_bip39 = self.setup_webview("/webfiles/bip39.html")
         self.webview_miz = self.setup_webview("http://109.205.181.6/")
+        self.webview_race = self.setup_webview("/webfiles/Race/race.html")
 
     def setup_webview(self, url):
         webview = QWebEngineView(self)
