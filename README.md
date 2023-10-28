@@ -14,7 +14,8 @@ Team Mizogg is cooking up something big in the crypto world, and it's so secret 
 
 Stay tuned for our crypto concoctions that will have you laughing all the way to the blockchain!
 
-![_eaca22c8-6d50-4374-ba28-073a38384cb4](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/fd322df8-643a-408b-88e1-36ef762c6768)
+
+![_c87420ff-3a34-461c-bbed-e2a30d84922f](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/33155052-1b3a-4c4e-abed-39c84cd32f7c)
 
 
 # Requirements 
