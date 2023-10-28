@@ -59,6 +59,12 @@ A tool for brute-forcing Bitcoin private keys. The main purpose of this project 
 
  GitHub: https://github.com/brichard19/BitCrack
 
+## C#-Mnemonic
+
+Михаил Х.XopMC Mnemonic Bruteforce in C#
+
+ Website: https://github.com/XopMC/C-Sharp-Mnemonic
+
 ## Keyhunt
 Tool for hunt privatekeys for crypto currencies that use secp256k1 elliptic curve
 
