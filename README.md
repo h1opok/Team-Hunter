@@ -104,7 +104,8 @@ WanderingPhilosopher
 
  # TeamHunter GUI
 
-https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/4f31d786-ded4-47a8-a91c-49ea624762ae
+
+https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/57c799b7-b827-4282-aaaa-f18858c90af9
 
 
 
