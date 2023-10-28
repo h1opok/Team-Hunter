@@ -1,6 +1,7 @@
 # Team-Hunter GUI
 
-![titlebig](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/5b2c4102-2613-4187-9194-4a8b101a5c4b)
+![titlebig](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/61e6eb63-1e08-4ae0-81c9-ee7066bbd62f)
+
 
 
 This Python application, named "Team Hunter GUI," provides a user-friendly interface for various cryptocurrency-related tools and functions.
@@ -13,8 +14,7 @@ Team Mizogg is cooking up something big in the crypto world, and it's so secret 
 
 Stay tuned for our crypto concoctions that will have you laughing all the way to the blockchain!
 
-![_c87420ff-3a34-461c-bbed-e2a30d84922f](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/0b00f7f5-d1a5-48a8-a455-41af274e5cb1)
-
+![_eaca22c8-6d50-4374-ba28-073a38384cb4](https://github.com/Team-Mizogg/Team-Hunter/assets/88630056/fd322df8-643a-408b-88e1-36ef762c6768)
 
 
 # Requirements 
