@@ -27,10 +27,16 @@ class StartScreen(QWidget):
         <br><font size="4">
         This is a classic Snake game.<br>
         Your goal is to control the snake using the arrow keys and collect the Bitcoin (BTC) symbols on the board.<br>
-        Be careful not to crash into yourself. <br>
+        Be careful not to crash into yourself. AND Donn't Collect Bad Food <br>
         The longer your snake gets, the higher your score! Good luck and have fun!
         </font>
-        </center><br><br><br></html>
+        <br><br><font size="8">
+        Image Good food: <img src="webfiles/css/images/main/btc.png">
+        <br><br>
+        Image Bad food: <img src="webfiles/css/images/main/bad.png">
+        <br><br>
+        <img src="webfiles/css/images/main/head.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png"><img src="webfiles/css/images/main/body.png">
+                </font></center><br><br><br></html>
         """
         instructions = QLabel(combined_text)
 
@@ -136,17 +142,27 @@ class Board(QFrame):
 
     def __init__(self, parent):
         super().__init__(parent)
+        
         self.timer = QBasicTimer()
         self.snake = [[5, 10], [5, 11]]
         self.current_x_head = self.snake[0][0]
         self.current_y_head = self.snake[0][1]
         self.load_images() 
+        
+        # Move these initializations up
         self.food = []
+        self.food_timestamps = {}  # A dictionary to store timestamps of food items
+        self.bad_food = []  # List to keep track of bad food
+        
         self.grow_snake = False
         self.board = []
         self.direction = 1
-        self.drop_food(1, 2)
+        
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+        # Move the drop_food method call to the end of the __init__ method
+        self.drop_food(1, 2)
+
 
     def load_images(self):
         image_path = "webfiles/css/images/main/"  # Adjust the path to your image directory
@@ -155,6 +171,7 @@ class Board(QFrame):
         self.dot = QPixmap(image_path + "body.png").scaled(image_size[0], image_size[1])
         self.head = QPixmap(image_path + "head.png").scaled(image_size[0], image_size[1])
         self.apple = QPixmap(image_path + "btc.png").scaled(image_size[0], image_size[1])
+        self.bad_apple = QPixmap(image_path + "bad.png").scaled(image_size[0], image_size[1])
 
 
     def square_width(self):
@@ -180,6 +197,8 @@ class Board(QFrame):
         head_pixmap = self.head.scaled(int(self.square_width()), int(self.square_height()))
         dot_pixmap = self.dot.scaled(int(self.square_width()), int(self.square_height()))
         apple_pixmap = self.apple.scaled(int(self.square_width()), int(self.square_height()))
+        bad_apple_pixmap = self.bad_apple.scaled(int(self.square_width()), int(self.square_height()))
+
 
         for pos in self.snake:
             if pos == self.snake[0]:
@@ -194,6 +213,11 @@ class Board(QFrame):
             painter.drawPixmap(int(rect.left() + pos[0] * self.square_width()),  # Convert to int
                               int(boardtop + pos[1] * self.square_height()),  # Convert to int
                               apple_pixmap)
+                              
+        for pos in self.bad_food:
+            painter.drawPixmap(int(rect.left() + pos[0] * self.square_width()),  # Convert to int
+                               int(boardtop + pos[1] * self.square_height()),  # Convert to int
+                               bad_apple_pixmap)
 
 
 
@@ -246,10 +270,22 @@ class Board(QFrame):
 
     def timerEvent(self, event):
         if event.timerId() == self.timer.timerId():
+            self.check_for_bad_food()  # Check and update bad food
             self.move_snake()
             self.is_food_collision()
             self.is_suicide()
             self.update()
+
+    def check_for_bad_food(self):
+        current_time = QDateTime.currentMSecsSinceEpoch()
+        fifteen_seconds = 15 * 1000  # 15000 milliseconds or 15 seconds
+
+        for pos in self.food[:]:
+            if current_time - self.food_timestamps[tuple(pos)] >= fifteen_seconds:
+                self.food.remove(pos)
+                self.bad_food.append(pos)
+                del self.food_timestamps[tuple(pos)]  # Remove the timestamp entry
+
 
     def is_suicide(self):
         for i in range(1, len(self.snake)):
@@ -258,23 +294,32 @@ class Board(QFrame):
                 self.timer.stop()
 
     def is_food_collision(self):
-        for pos in self.food:
+        for pos in self.food[:]:
             if pos == self.snake[0]:
                 self.food.remove(pos)
                 self.drop_food(1, 2)
                 self.grow_snake = True
 
+        for pos in self.bad_food:
+            if pos == self.snake[0]:
+                self.gameOver.emit(len(self.snake) - 2)
+                self.timer.stop()
+
     def drop_food(self, min_food=1, max_food=1):
         num_food = random.randint(min_food, max_food)
-        
+        current_time = QDateTime.currentMSecsSinceEpoch()
+
         for _ in range(num_food):
             while True:
                 x = random.randint(3, 58)
                 y = random.randint(3, 38)
-                # Check if the generated position is not on the snake
-                if all(pos != [x, y] for pos in self.snake) and all(pos != [x, y] for pos in self.food):
+                if all(pos != [x, y] for pos in self.food) and \
+                   all(pos != [x, y] for pos in self.bad_food) and \
+                   all(pos != [x, y] for pos in self.snake):
                     self.food.append([x, y])
+                    self.food_timestamps[(x, y)] = current_time  # Store the timestamp
                     break
+
 
 
 def main():
