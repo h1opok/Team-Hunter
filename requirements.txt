@@ -3,7 +3,6 @@ pyqtdarktheme
 requests
 base58
 ecdsa
-webbrowser
 PyQt6-WebEngine
 simplebloomfilter
 bitarray==1.9.2
